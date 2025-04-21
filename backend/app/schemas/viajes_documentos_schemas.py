@@ -1,0 +1,22 @@
+from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel, Field
+
+class DocumentoViajeBase(BaseModel):
+    codigo: str = Field(..., min_length=3, max_length=50, description="Código del documento")
+    tipo_documento: str = Field(..., min_length=3, max_length=50, description="Tipo de documento del viaje")
+    codigo_documento: Optional[str] = Field(None, min_length=3, max_length=50, description="Código del documento del viaje")
+    fecha_emision: Optional[datetime] = Field(None, description="Fecha de emisión del documento")
+    fecha_vencimiento: Optional[datetime] = Field(None, description="Fecha de vencimiento del documento")
+    archivo_url: str = Field(..., min_length=5, max_length=100, description="URL del archivo del documento")    
+    viaje_id: int = Field(..., description="ID del viaje asociado")
+
+class DocumentoViajeCreate(DocumentoViajeBase):
+    pass
+
+class DocumentoViaje(DocumentoViajeBase):
+    id: int = Field(..., description="ID del documento del viaje")
+    fecha_creacion: datetime = Field(..., description="Fecha de creación del documento")
+
+    class Config:
+        from_attributes = True

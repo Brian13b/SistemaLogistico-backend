@@ -1,0 +1,359 @@
+import { useState, useEffect, useRef } from 'react';
+import Modal from '../../components/Modal';
+import { conductoresService } from '../../services/ConductoresService';
+import { conductorDocumentosService } from '../../services/ConductorDocumentosServices';
+import { FaDownload, FaFileAlt } from 'react-icons/fa';
+import jsPDF from 'jspdf';
+
+function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
+  const [conductor, setConductor] = useState(null);
+  const [documentos, setDocumentos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setConductor(null);
+      setDocumentos([]);
+      setError(null);
+      return;
+    }
+    
+    if (isOpen && conductorId) {
+      const fetchConductorData = async () => {
+        try {
+          setLoading(true);
+          
+          const conductorRes = await conductoresService.getById(conductorId);
+          setConductor(conductorRes.data);
+          
+          try {
+            const documentosRes = await conductorDocumentosService.getAllByConductor(conductorId);
+            setDocumentos(documentosRes.data);
+          } catch(err) {
+            console.error(err);
+            setError('Error al cargar los documentos del conductor');
+          }
+          
+          setError(null);
+          
+        } catch (err) {
+          console.error("Error fetching conductor data:", err);
+          setError('Error al cargar los datos del conductor');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchConductorData();
+    }
+  }, [isOpen, conductorId]);
+
+  const handleDownload = async (documentoId, nombre) => {
+    try {
+      const nombreArchivo = nombre || `documento-${documentoId}`;
+      const nombreConExtension = `${nombreArchivo}.pdf`;
+  
+      const response = await fetch(`/api/documentos_conductor/${documentoId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+  
+      if (!response.ok) throw new Error('Error al descargar el documento');
+  
+      const contentType = response.headers.get('content-type');
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(new Blob([blob], { type: contentType }));
+
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = nombreConExtension; 
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error descargando documento:', error);
+    }
+  };
+  
+  const handleGeneratePDF = async () => {
+    if (!contentRef.current) return;
+    
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const width = pdf.internal.pageSize.getWidth();
+      const margin = 10;
+      let y = margin;
+      
+      // Add title
+      pdf.setFontSize(16);
+      pdf.setFont(undefined, 'bold');
+      pdf.text(`Ficha de Conductor: ${conductor.nombre} ${conductor.apellido}`, margin, y);
+      y += 10;
+      
+      if (conductor.foto) {
+        try {
+          const img = new Image();
+          img.crossOrigin = 'Anonymous';
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = conductor.foto;
+          });
+          
+          const imgHeight = 30;
+          pdf.addImage(img, 'JPEG', margin, y, 30, imgHeight);
+          y += imgHeight + 5;
+        } catch (imgError) {
+          console.warn("Error loading conductor image:", imgError);
+        }
+      }
+      
+      pdf.setFontSize(12);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Información Personal', margin, y);
+      y += 7;
+      
+      pdf.setFont(undefined, 'normal');
+      pdf.text(`DNI: ${conductor.dni || 'No especificado'}`, margin, y);
+      y += 6;
+      pdf.text(`Código: ${conductor.codigo || `C-${String(conductorId).padStart(3, '0')}`}`, margin, y);
+      y += 6;
+      pdf.text(`Estado: ${conductor.estado || 'N/A'}`, margin, y);
+      y += 10;
+      
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Información de Contacto', margin, y);
+      y += 7;
+      
+      pdf.setFont(undefined, 'normal');
+      pdf.text(`Teléfono: ${conductor.numero_contacto || 'No especificado'}`, margin, y);
+      y += 6;
+      pdf.text(`Email: ${conductor.email_contacto || 'No especificado'}`, margin, y);
+      y += 6;
+      pdf.text(`Dirección: ${conductor.direccion || 'No especificada'}`, margin, y);
+      y += 10;
+      
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Información de Licencia', margin, y);
+      y += 7;
+      
+      pdf.setFont(undefined, 'normal');
+      pdf.text(`Número de Licencia: ${conductor.numero_licencia || 'No especificado'}`, margin, y);
+      y += 6;
+      pdf.text(`Fecha Vencimiento: ${formatDate(conductor.fecha_vencimiento) || 'N/A'}`, margin, y);
+      y += 10;
+
+      y += 6;
+      
+      if (documentos && documentos.length > 0) {
+        y += 5;
+        pdf.setFont(undefined, 'bold');
+        pdf.text('Documentos', margin, y);
+        y += 7;
+        
+        pdf.text('Tipo de Documento', margin, y);
+        pdf.text('Fecha Emisión', margin + 80, y);
+        pdf.text('Fecha Vencimiento', margin + 130, y);
+        y += 7;
+        
+        pdf.setFont(undefined, 'normal');
+        documentos.forEach(doc => {
+          pdf.text(doc.tipo_documento || 'No especificado', margin, y);
+          pdf.text(formatDate(doc.fecha_emision) || 'N/A', margin + 80, y);
+          pdf.text(formatDate(doc.fecha_vencimiento) || 'N/A', margin + 130, y);
+          y += 7;
+          
+          if (y > pdf.internal.pageSize.getHeight() - margin) {
+            pdf.addPage();
+            y = margin;
+          }
+        });
+      }
+      
+      pdf.setProperties({
+        title: `Ficha de Conductor: ${conductor.nombre} ${conductor.apellido}`,
+        subject: 'Información de Conductor',
+        creator: 'Sistema de Gestión'
+      });
+      
+      pdf.save(`Ficha_Conductor_${conductor.nombre}_${conductor.apellido}.pdf`);
+      
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
+  };
+
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Fecha inválida';
+      return date.toLocaleDateString('es-AR');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Error en fecha';
+    }
+  };
+
+  return (
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      title="Detalles del Conductor" 
+      darkMode={darkMode}
+    >
+      {loading ? (
+        <div className="flex justify-center items-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div>
+          <p className="ml-2">Cargando datos...</p>
+        </div>
+      ) : error ? (
+        <div className="p-4 bg-red-100 text-red-700 rounded-md">
+          <p>{error}</p>
+        </div>
+      ) : conductor ? (
+        <div className="space-y-6" ref={contentRef}>
+          {/* Encabezado con foto e información principal */}
+          <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
+            <div className="flex-shrink-0">
+              <img
+                src={conductor.foto || "https://picsum.photos/200"} 
+                alt="Foto del conductor"
+                className="w-32 h-32 rounded-full object-cover border-2 border-gray-300"
+              />
+            </div>
+            <div className="flex-grow">
+              <h2 className="text-xl font-bold mb-1">{conductor.nombre} {conductor.apellido}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">DNI</p>
+                  <p className="font-medium">{conductor.dni}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Código</p>
+                  <p className="font-medium">{conductor.codigo || `C-${String(conductorId).padStart(3, '0')}`}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Estado</p>
+                  <span className={`px-2 py-1 rounded text-sm ${
+                    (conductor.estado === 'Activo') 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    { conductor.estado || 'N/A'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Información de contacto */}
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+            <h3 className="text-lg font-semibold mb-3">Información de Contacto</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Teléfono</p>
+                <p>{conductor.numero_contacto || 'No especificado'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
+                <p>{conductor.email_contacto || 'No especificado'}</p>
+              </div>
+              <div className="md:col-span-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Dirección</p>
+                <p>{conductor.direccion || 'No especificada'}</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Licencia */}
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+            <h3 className="text-lg font-semibold mb-3">Información de Licencia</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Número de Licencia</p>
+                <p>{conductor.numero_licencia || 'No especificado'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Fecha Vencimiento</p>
+                <p>{formatDate()}</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Documentos */}
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+            <h3 className="text-lg font-semibold mb-3">Documentos</h3>
+            {documentos && documentos.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {documentos.map(doc => (
+                  <div 
+                    key={doc.id} 
+                    className={`p-3 rounded border flex items-center justify-between ${
+                      darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <FaFileAlt className="mr-2" />
+                      <div>
+                        <p className="font-medium">{doc.tipo_documento || 'No especificado'}</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => handleDownload(doc.id, doc.nombre_original)}
+                      className={`text-sm px-2 py-1 rounded-full ${
+                        darkMode 
+                          ? 'bg-gray-700 hover:bg-gray-600 text-yellow-500' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-blue-600'
+                      }`}
+                    >
+                      <FaDownload />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 italic">No hay documentos disponibles</p>
+            )}
+          </div>
+          
+          {/* Botones de acción */}
+          <div className="flex justify-end space-x-4 mt-6">
+            {/* Ejemplo de botones de acción */}
+            <button 
+              onClick={handleGeneratePDF}
+              className={`px-4 py-2 rounded flex items-center gap-2 ${
+                darkMode 
+                  ? 'bg-gray-700 hover:bg-gray-600 text-yellow-500' 
+                  : 'bg-gray-100 hover:bg-gray-200 text-blue-600'
+              }`}
+            >
+              <FaDownload /> Descargar Ficha
+            </button>
+            <button 
+              onClick={onClose}
+              className={`px-4 py-2 rounded ${
+                darkMode 
+                  ? 'bg-yellow-500 hover:bg-yellow-600 text-gray-900' 
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p>No se encontraron datos del conductor</p>
+      )}
+    </Modal>
+  );
+}
+
+export default ConductorModal;
