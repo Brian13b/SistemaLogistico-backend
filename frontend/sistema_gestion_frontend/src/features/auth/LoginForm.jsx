@@ -107,9 +107,6 @@ function LoginForm({ darkMode }) {
       >
         {loading ? 'Cargando...' : 'Entrar'}
       </button>
-      <div className="mt-6 text-center">
-        <a href="#" className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>Registrarme</a>
-      </div>
     </form>
   );
 }

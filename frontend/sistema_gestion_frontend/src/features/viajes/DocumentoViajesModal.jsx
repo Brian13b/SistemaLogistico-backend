@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { FaUpload, FaTrash } from "react-icons/fa";
 import Modal from "../../components/Modal";
-import { viajesDocumentosService } from "../../services/ViajesDocumentosService";
+import { viajesDocumentosService } from "../../services/ViajesDocumentosService"
+import axios from "axios";
 
 function ViajesDocumentosModal({ isOpen, onClose, viajeId, viajeInfo, darkMode }) {
     const [documentos, setDocumentos] = useState([]);
@@ -11,26 +12,23 @@ function ViajesDocumentosModal({ isOpen, onClose, viajeId, viajeInfo, darkMode }
 
     const [formData, setFormData] = useState({
         codigo: '',
-        id_conductor: '',
         tipo_documento: '',
-        archivo_url: null,
-        tamanio: '',
+        codigo_documento: '',
         fecha_emision: '',
         fecha_vencimiento: '',
-        esta_activo: true
+        viaje_id: viajeId
     });
+    const [file, setFile] = useState(null);
 
     useEffect(() => {
         if (isOpen) {
             setFormData({
                 codigo: '',
-                id_conductor: '',
                 tipo_documento: '',
-                archivo_url: '',
-                tamanio: '',
+                codigo_documento: '',
                 fecha_emision: '',
                 fecha_vencimiento: '',
-                esta_activo: true
+                viaje_id: viajeId
             });
             fetchDocumentos();
         }
@@ -45,10 +43,15 @@ function ViajesDocumentosModal({ isOpen, onClose, viajeId, viajeInfo, darkMode }
         try {
             setLoading(true);
             const response = await viajesDocumentosService.getAllByViaje(viajeId);
-            setDocumentos(response.data);
+            
+            const filteredDocumentos = viajeId 
+                ? response.data.filter(doc => doc.viaje_id === viajeId)
+                : response.data;
+                
+            setDocumentos(filteredDocumentos);
             setError(null);
         } catch (error) {
-            console.error("Error fetching documentos:", err);
+            console.error("Error fetching documentos:", error);
             setError('Error al cargar los documentos');
         } finally {
             setLoading(false);
@@ -64,23 +67,101 @@ function ViajesDocumentosModal({ isOpen, onClose, viajeId, viajeInfo, darkMode }
     };
 
     const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        setFormData((prevData) => ({
-            ...prevData,
-            archivo_url: file,
-            tamanio: file.size
-        }));
+        const selectedFile = e.target.files[0];
+        if (selectedFile) {
+            setFile(selectedFile);
+        }
     };
 
     const handleSubmit = async (e) => {
-        console.log("Subir archivo a Back4App y la URL en la base de datos");
+        e.preventDefault();
+        
+        if (!file) {
+            setError('Por favor seleccione un archivo');
+            return;
+        }
+        
+        setUploading(true);
+        setError(null);
+        
+        try {
+            // Crear FormData para enviar datos y archivo
+            const uploadData = new FormData();
+            uploadData.append('documento_data', JSON.stringify(formData));
+            uploadData.append('archivo', file);
+            
+            const response = await axios.post(
+                'http://localhost:8000/api/documentos_viajes/',
+                uploadData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            );
+            
+            setUploading(false);
+            
+            // Resetear formulario
+            setFormData({
+                codigo: '',
+                tipo_documento: '',
+                codigo_documento: '',
+                fecha_emision: '',
+                fecha_vencimiento: '',
+                viaje_id: viajeId,
+                esta_activo: true
+            });
+            setFile(null);
+            
+            // Actualizar lista de documentos
+            fetchDocumentos();
+            
+        } catch (error) {
+            setUploading(false);
+            setError('Error al subir el documento: ' + (error.response?.data?.detail || error.message));
+        }
+    };
+
+    const handleDownload = async (documentoId) => {
+        try {
+            // Hacer solicitud para descargar archivo
+            const response = await axios.get(
+                `http://localhost:8000/api/documentos_viajes/${documentoId}/descargar`,
+                { responseType: 'blob' } // Importante para recibir archivos binarios
+            );
+            
+            // Crear URL de objeto para la descarga
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            
+            // Encontrar el nombre del archivo
+            const documento = documentos.find(doc => doc.id === documentoId);
+            const fileName = documento?.archivo_nombre || 'documento.pdf';
+            
+            // Crear elemento <a> para simular click y descargar
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+            
+            // Limpieza
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+            
+        } catch (error) {
+            console.error("Error al descargar el documento:", error);
+            setError('Error al descargar el documento');
+        }
     };
 
     const handleDelete = async (documentoId) => {
-        if (window.confirm('¿Está seguro que desea eliminar este documento?')) return;
+        // Corregido la lógica de confirmación
+        if (!window.confirm('¿Está seguro que desea eliminar este documento?')) return;
 
         try {
-            await viajesDocumentosService.deleteDocumento(documentoId);
+            // Utilizamos axios directamente
+            await axios.delete(`http://localhost:8000/api/documentos_viajes/${documentoId}/`);
             fetchDocumentos();
         } catch (error) {
             console.error("Error al eliminar el documento:", error);
@@ -130,23 +211,6 @@ function ViajesDocumentosModal({ isOpen, onClose, viajeId, viajeInfo, darkMode }
                                     required
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">
-                                    Esta Activo?
-                                </label>
-                                <select
-                                    name="esta_activo"
-                                    value={formData.esta_activo}
-                                    onChange={handleInputChange}
-                                    className={`w-full p-2 rounded border ${
-                                    darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
-                                    }`}
-                                    required
-                                >
-                                    <option value={true}>Sí</option>
-                                    <option value={false}>No</option>
-                                </select>
-                            </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -168,6 +232,20 @@ function ViajesDocumentosModal({ isOpen, onClose, viajeId, viajeInfo, darkMode }
                                     <option value="Ticket Gasoil">Ticket Gasoil</option>
                                     <option value="Otro">Otro</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">
+                                    Código del Documento
+                                </label>
+                                <input
+                                    type="text"
+                                    name="codigo_documento"
+                                    value={formData.codigo_documento}
+                                    onChange={handleInputChange}
+                                    className={`w-full p-2 rounded border ${
+                                    darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+                                    }`}
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">
@@ -195,7 +273,6 @@ function ViajesDocumentosModal({ isOpen, onClose, viajeId, viajeInfo, darkMode }
                                     className={`w-full p-2 rounded border ${
                                     darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
                                     }`}
-                                    required
                                 />
                             </div>
                         
@@ -241,7 +318,7 @@ function ViajesDocumentosModal({ isOpen, onClose, viajeId, viajeInfo, darkMode }
                 </div>
                 {/* Lista de documentos */}
                 <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                    <h3 className="text-lg font-semibold mb-3">Documentos del Conductor</h3>
+                    <h3 className="text-lg font-semibold mb-3">Documentos del Viaje</h3>
                     
                     {loading ? (
                     <div className="flex justify-center items-center p-8">
@@ -253,7 +330,9 @@ function ViajesDocumentosModal({ isOpen, onClose, viajeId, viajeInfo, darkMode }
                         <table className={`min-w-full ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                         <thead className={darkMode ? 'bg-gray-800' : 'bg-gray-200'}>
                             <tr>
+                            <th className="py-2 px-4 text-left">Código</th>
                             <th className="py-2 px-4 text-left">Tipo</th>
+                            <th className="py-2 px-4 text-left">Código Doc.</th>
                             <th className="py-2 px-4 text-left">Emisión</th>
                             <th className="py-2 px-4 text-left">Vencimiento</th>
                             <th className="py-2 px-4 text-right">Acciones</th>
@@ -262,13 +341,15 @@ function ViajesDocumentosModal({ isOpen, onClose, viajeId, viajeInfo, darkMode }
                         <tbody>
                             {documentos.map(doc => (
                             <tr key={doc.id} className={darkMode ? 'border-t border-gray-700' : 'border-t border-gray-300'}>
+                                <td className="py-3 px-4">{doc.codigo}</td>
                                 <td className="py-3 px-4">{doc.tipo_documento}</td>
+                                <td className="py-3 px-4">{doc.codigo_documento || 'N/A'}</td>
                                 <td className="py-3 px-4">{formatDate(doc.fecha_emision)}</td>
                                 <td className="py-3 px-4">{formatDate(doc.fecha_vencimiento)}</td>
                                 <td className="py-3 px-4 text-right">
                                 <div className="flex justify-end space-x-2">
                                     <button 
-                                    onClick={() => window.open(`/api/documentos_conductor/${doc.id}?download=true`, '_blank')}
+                                    onClick={() => handleDownload(doc.id)}
                                     className={`p-1 rounded ${
                                         darkMode ? 'hover:bg-gray-600 text-yellow-500' : 'hover:bg-gray-200 text-blue-600'
                                     }`}
@@ -294,7 +375,7 @@ function ViajesDocumentosModal({ isOpen, onClose, viajeId, viajeInfo, darkMode }
                     </div>
                     ) : (
                     <p className="text-center py-4 italic">
-                        No hay documentos disponibles para este conductor
+                        No hay documentos disponibles para este viaje
                     </p>
                     )}
                 </div>

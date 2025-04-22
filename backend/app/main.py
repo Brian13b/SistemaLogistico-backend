@@ -48,8 +48,11 @@ SERVICE_ACCOUNT_INFO = {
     "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_X509_CERT_URL")
 }
 
-credentials = service_account.Credentials.from_service_account_info(
-    SERVICE_ACCOUNT_INFO, scopes=SCOPES
-)
+try:
+    credentials = service_account.Credentials.from_service_account_info(
+        SERVICE_ACCOUNT_INFO, scopes=SCOPES
+    )
 
-drive_service = build('drive', 'v3', credentials=credentials)
+    drive_service = build('drive', 'v3', credentials=credentials)
+except Exception as e:
+    print(f"Error al inicializar el servicio de Google Drive: {e}")
