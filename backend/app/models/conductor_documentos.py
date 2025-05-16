@@ -7,16 +7,16 @@ class ConductorDocumento(Base):
     __tablename__ = 'documentos_conductores'
     
     id = Column(Integer, primary_key=True, index=True)
-    codigo = Column(String(50), nullable=False, unique=True)
+    codigo_documento = Column(String, index=True)
     id_conductor = Column(Integer, ForeignKey('conductores.id', ondelete='CASCADE'))
-    tipo_documento = Column(String(50), nullable=False)
-    nombre_original = Column(String(255), nullable=False)  # Nombre original del archivo
-    archivo_url = Column(String(255), nullable=False)  # UUID generado + extensión
-    tamanio = Column(Integer)  # Tamaño en bytes
-    fecha_emision = Column(Date, nullable=False)
-    fecha_vencimiento = Column(Date, nullable=False)
-    esta_activo = Column(Boolean, default=True)  # Para soft delete
-    fecha_carga = Column(DateTime, default=datetime.now)
-    actualizado_en = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    tipo_documento = Column(String, index=True)
+    archivo_url = Column(String, index=True)
+    archivo_nombre = Column(String, index=True)
+    fecha_emision = Column(DateTime)
+    fecha_vencimiento = Column(DateTime)
+    esta_activo = Column(Boolean, default=True)
+    archivo_drive_id = Column(String, index=True)
+    fecha_creacion = Column(DateTime, default=datetime.now)
+    fecha_actualizacion = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     conductor = relationship('Conductor', back_populates='documentos')

@@ -19,11 +19,7 @@ from app.services.google_drive import drive_service
 router = APIRouter()
 
 @router.post("/documentos_viajes/", response_model=DocumentoViajeResponse)
-async def crear_documento_viaje_endpoint(
-    documento_data: str = Form(...),
-    archivo: UploadFile = File(...),
-    db: Session = Depends(get_db)
-):
+async def crear_documento_viaje(documento_data: str = Form(...), archivo: UploadFile = File(...), db: Session = Depends(get_db)):
     """Crear un nuevo documento de viaje con archivo."""
     try:
         # Convertir string JSON a objeto Python
@@ -37,7 +33,6 @@ async def crear_documento_viaje_endpoint(
         raise HTTPException(status_code=400, detail="Error al procesar los datos JSON.")
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al procesar la solicitud: {str(e)}")
-
 
 @router.get("/documentos_viajes/", response_model=list[DocumentoViajeResponse])
 def leer_documentos_viajes(db: Session = Depends(get_db)):
@@ -61,12 +56,7 @@ def leer_documento_viaje(documento_id: int, db: Session = Depends(get_db)):
     return db_documento
 
 @router.put("/documentos_viajes/{documento_id}", response_model=DocumentoViajeResponse)
-async def actualizar_documento_viaje_endpoint(
-    documento_id: int,
-    documento_data: str = Form(...),
-    archivo: Optional[UploadFile] = None,
-    db: Session = Depends(get_db)
-):
+async def actualizar_documento_viaje(documento_id: int, documento_data: str = Form(...), archivo: Optional[UploadFile] = None, db: Session = Depends(get_db)):
     """Actualizar un documento de viaje existente."""
     try:
         # Convertir string JSON a objeto Python
@@ -98,6 +88,7 @@ def eliminar_documento_viaje_endpoint(documento_id: int, db: Session = Depends(g
 async def descargar_documento_viaje(documento_id: int, db: Session = Depends(get_db)):
     """Descargar el archivo asociado a un documento de viaje."""
     db_documento = obtener_documento_viaje(db=db, documento_id=documento_id)
+
     if db_documento is None:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     
@@ -111,5 +102,6 @@ async def descargar_documento_viaje(documento_id: int, db: Session = Depends(get
                 "Content-Disposition": f"attachment; filename={db_documento.archivo_nombre}"
             }
         )
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al descargar el archivo: {str(e)}")

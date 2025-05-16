@@ -3,7 +3,6 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 class DocumentoViajeBase(BaseModel):
-    codigo: str = Field(..., min_length=3, max_length=50, description="Código del documento")
     tipo_documento: str = Field(..., min_length=3, max_length=50, description="Tipo de documento del viaje")
     codigo_documento: Optional[str] = Field(None, min_length=3, max_length=50, description="Código del documento del viaje")
     fecha_emision: Optional[datetime] = Field(None, description="Fecha de emisión del documento")
@@ -18,6 +17,7 @@ class DocumentoViajeResponse(DocumentoViajeBase):
     archivo_url: str = Field(..., description="URL del archivo del documento")
     archivo_nombre: str = Field(..., description="Nombre original del archivo")
     fecha_creacion: datetime = Field(..., description="Fecha de creación del documento")
+    fecha_actualizacion: datetime = Field(..., description="Fecha de actualización del documento")
     
     class Config:
         from_attributes = True
