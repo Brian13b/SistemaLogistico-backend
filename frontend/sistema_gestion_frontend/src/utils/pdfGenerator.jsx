@@ -1,191 +1,184 @@
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
-// Colores para el diseño del PDF
-const COLORS = {
-  primary: '#3498db',
-  secondary: '#2ecc71',
-  accent: '#e74c3c',
-  dark: '#2c3e50',
-  light: '#ecf0f1',
-  text: '#333333'
+export const generateFichaPDF = async (type, data, documentos = [], formatDate) => {
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const margin = 10;
+  let y = margin;
+
+  const width = pdf.internal.pageSize.getWidth();
+  const height = pdf.internal.pageSize.getHeight();
+
+  // Título principal
+  pdf.setFontSize(16);
+  pdf.setFont(undefined, 'bold');
+
+  if (type === 'vehiculo') {
+    pdf.text(`Ficha del Vehículo: ${data.marca} ${data.modelo}`, margin, y);
+    y += 10;
+
+    y = renderVehiculo(pdf, data, y, margin);
+  }
+
+  if (type === 'conductor') {
+    pdf.text(`Ficha de Conductor: ${data.nombre} ${data.apellido}`, margin, y);
+    y += 10;
+
+    y = await renderConductor(pdf, data, y, margin, formatDate);
+  }
+
+  if (type === 'viaje') {
+    pdf.text(`Detalles del Viaje: ${data.origen} - ${data.destino}`, margin, y);
+    y += 10;
+
+    y = renderViaje(pdf, data, y, margin, formatDate);
+  }
+
+  if (documentos.length > 0) {
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Documentos', margin, y + 10);
+    y += 17;
+
+    autoTable(pdf, {
+      startY: y,
+      head: [['Tipo de Documento', 'Fecha Emisión', 'Fecha Vencimiento']],
+      body: documentos.map(doc => [
+        doc.tipo_documento || 'No especificado',
+        formatDate(doc.fecha_emision) || 'N/A',
+        formatDate(doc.fecha_vencimiento) || 'N/A',
+      ]),
+      margin: { left: margin },
+      styles: { fontSize: 10 },
+    });
+  }
+
+  pdf.setProperties({
+    title: `Ficha ${type}`,
+    subject: 'Información',
+    creator: 'Sistema de Gestión'
+  });
+
+  const filename = `Ficha_${type}_${(data.nombre || data.marca || data.origen || 'registro').replace(/\s/g, '_')}.pdf`;
+  pdf.save(filename);
 };
 
-export const generarReportePDF = (reportesSeleccionados, tiposReportes, datosEjemplo, fechaInicio, fechaFin) => {
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm'
+const renderVehiculo = (pdf, vehiculo, y, margin) => {
+  pdf.setFontSize(12);
+  pdf.setFont(undefined, 'bold');
+  pdf.text('Información del Vehículo:', margin, y);
+  y += 7;
+
+  pdf.setFont(undefined, 'normal');
+  const fields = [
+    ['Patente', vehiculo.patente],
+    ['Código', vehiculo.codigo],
+    ['Estado', vehiculo.estado],
+    ['Año', vehiculo.anio],
+    ['Tipo', vehiculo.tipo],
+    ['Tara', vehiculo.tara],
+    ['Carga Máxima', vehiculo.carga_maxima],
+    ['Kilometraje', vehiculo.kilometraje],
+  ];
+
+  fields.forEach(([label, value]) => {
+    pdf.text(`${label}: ${value || 'No especificado'}`, margin, y);
+    y += 6;
   });
-  
-  // Configuración inicial
-  doc.setFont('helvetica');
-  doc.setTextColor(COLORS.text);
-  
-  // Logo (puedes reemplazar con tu propio logo en base64)
-  // doc.addImage(logoData, 'PNG', 15, 10, 30, 15);
-  
-  // Encabezado
-  doc.setFontSize(20);
-  doc.setTextColor(COLORS.primary);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Reporte del Sistema', 105, 20, { align: 'center' });
-  
-  doc.setFontSize(12);
-  doc.setTextColor(COLORS.dark);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Período: ${formatearFechaAR(fechaInicio)} - ${formatearFechaAR(fechaFin)}`, 105, 28, { align: 'center' });
-  
-  // Línea decorativa
-  doc.setDrawColor(COLORS.primary);
-  doc.setLineWidth(0.5);
-  doc.line(15, 32, 195, 32);
-  
-  // Fecha de generación
-  const fechaGen = new Date();
-  doc.setFontSize(10);
-  doc.setTextColor(COLORS.text);
-  doc.text(`Generado el: ${fechaGen.toLocaleDateString('es-AR')} a las ${fechaGen.toLocaleTimeString('es-AR')}`, 15, 40);
-  
-  let posY = 45;
-  
-  // Agregar cada reporte seleccionado
-  Object.entries(reportesSeleccionados).forEach(([id, seleccionado]) => {
-    if (seleccionado) {
-      const reporte = tiposReportes.find(r => r.id === id);
-      const datos = datosEjemplo[id];
-      
-      if (!datos || datos.length === 0) return;
-      
-      // Configuración de la tabla
-      let headers = [];
-      let rows = [];
-      let columnStyles = {};
-      
-      // Configurar según el tipo de reporte
-      switch(id) {
-        case 'viajes':
-          headers = ['ID', 'Origen', 'Destino', 'Fecha', 'Kilómetros'];
-          rows = datos.map(item => [
-            item.id,
-            item.origen,
-            item.destino,
-            item.fecha,
-            item.kilometros
-          ]);
-          columnStyles = {
-            0: { cellWidth: 15 },
-            3: { cellWidth: 20 },
-            4: { cellWidth: 20 }
-          };
-          break;
-          
-        case 'vehiculos':
-          headers = ['ID', 'Patente', 'Marca', 'Modelo', 'Año', 'Kilometraje'];
-          rows = datos.map(item => [
-            item.id,
-            item.patente,
-            item.marca,
-            item.modelo,
-            item.año,
-            item.km
-          ]);
-          columnStyles = {
-            0: { cellWidth: 15 },
-            1: { cellWidth: 20 },
-            4: { cellWidth: 15 },
-            5: { cellWidth: 20 }
-          };
-          break;
-          
-        case 'conductores':
-          headers = ['ID', 'Nombre', 'Licencia', 'Vencimiento', 'Viajes'];
-          rows = datos.map(item => [
-            item.id,
-            item.nombre,
-            item.licencia,
-            item.vencimiento,
-            item.viajes
-          ]);
-          columnStyles = {
-            0: { cellWidth: 15 },
-            2: { cellWidth: 20 },
-            4: { cellWidth: 15 }
-          };
-          break;
-          
-        case 'facturacion':
-          headers = ['N° Factura', 'Cliente', 'Monto', 'Fecha', 'Estado'];
-          rows = datos.map(item => [
-            item.num,
-            item.cliente,
-            `$${item.monto.toLocaleString('es-AR')}`,
-            item.fecha,
-            item.estado
-          ]);
-          columnStyles = {
-            0: { cellWidth: 25 },
-            2: { cellWidth: 20 },
-            3: { cellWidth: 20 },
-            4: { cellWidth: 20 }
-          };
-          break;
-      }
-      
-      // Título de la sección
-      doc.setFontSize(14);
-      doc.setTextColor(COLORS.secondary);
-      doc.setFont('helvetica', 'bold');
-      doc.text(reporte.nombre, 15, posY);
-      posY += 8;
-      
-      // Generar tabla con autoTable
-      doc.autoTable({
-        startY: posY,
-        head: [headers],
-        body: rows,
-        theme: 'grid',
-        headStyles: {
-          fillColor: COLORS.primary,
-          textColor: COLORS.light,
-          fontStyle: 'bold'
-        },
-        alternateRowStyles: {
-          fillColor: COLORS.light
-        },
-        columnStyles,
-        margin: { left: 15, right: 15 },
-        styles: {
-          fontSize: 10,
-          cellPadding: 3,
-          overflow: 'linebreak'
-        },
-        didDrawPage: (data) => {
-          posY = data.cursor.y + 10;
-        }
+
+  return y;
+};
+
+const renderConductor = async (pdf, conductor, y, margin, formatDate) => {
+  if (conductor.foto) {
+    try {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = conductor.foto;
       });
-      
-      // Espacio después de la tabla
-      posY += 10;
-      
-      // Verificar si necesitamos una nueva página
-      if (posY > 270) {
-        doc.addPage();
-        posY = 20;
-      }
+      pdf.addImage(img, 'JPEG', margin, y, 30, 30);
+      y += 35;
+    } catch (e) {
+      console.warn('Imagen conductor no cargada', e);
     }
+  }
+
+  pdf.setFontSize(12);
+  pdf.setFont(undefined, 'bold');
+  pdf.text('Información Personal', margin, y);
+  y += 7;
+
+  pdf.setFont(undefined, 'normal');
+  const info = [
+    ['DNI', conductor.dni || 'No especificado'],
+    ['Código', conductor.codigo || `C-${String(conductor.id).padStart(3, '0')}`],
+    ['Estado', conductor.estado || 'N/A'],
+    ['Teléfono', conductor.numero_contacto || 'No especificado'],
+    ['Email', conductor.email_contacto || 'No especificado'],
+    ['Dirección', conductor.direccion || 'No especificada'],
+    ['Fecha Vencimiento', formatDate(conductor.fecha_vencimiento) || 'No especificada'],
+  ];
+
+  info.forEach(([label, value]) => {
+    pdf.text(`${label}: ${value || 'No especificado'}`, margin, y);
+    y += 6;
   });
-  
-  // Pie de página
-  doc.setFontSize(10);
-  doc.setTextColor(COLORS.dark);
-  doc.setFont('helvetica', 'italic');
-  doc.text('© 2023 Transportes App - Todos los derechos reservados', 105, 287, { align: 'center' });
-  
-  return doc;
+
+  return y;
 };
 
-const formatearFechaAR = (fechaISO) => {
-  if (!fechaISO) return '';
-  const fecha = new Date(fechaISO);
-  return fecha.toLocaleDateString('es-AR');
+const renderViaje = (pdf, viaje, y, margin, formatDate) => {
+  pdf.setFont(undefined, 'bold');
+  pdf.text('Información del Viaje', margin, y);
+  y += 7;
+
+  pdf.setFont(undefined, 'normal');
+  const data = [
+    ['Código', viaje.codigo || 'No especificado'],
+    ['Estado', viaje.estado || 'N/A'],
+    ['Origen', viaje.origen || 'N/A'],
+    ['Destino', viaje.destino || 'N/A'],
+    ['Fecha Salida', formatDate(viaje.fecha_salida) || 'N/A'],
+    ['Fecha Llegada', formatDate(viaje.fecha_llegada) || 'N/A'],
+  ];
+
+  data.forEach(([label, value]) => {
+    pdf.text(`${label}: ${value || 'N/A'}`, margin, y);
+    y += 6;
+  });
+
+  if (viaje.conductor) {
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Conductor', margin, y);
+    y += 7;
+
+    pdf.setFont(undefined, 'normal');
+    pdf.text(`Nombre: ${viaje.conductor.nombre} ${viaje.conductor.apellido}`, margin, y);
+    y += 6;
+  }
+
+  if (viaje.vehiculo) {
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Vehículo', margin, y);
+    y += 7;
+
+    pdf.setFont(undefined, 'normal');
+    pdf.text(`Patente: ${viaje.vehiculo.patente}`, margin, y);
+    y += 6;
+  }
+
+  if (viaje.observaciones) {
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Observaciones', margin, y);
+    y += 7;
+
+    pdf.setFont(undefined, 'normal');
+    const split = pdf.splitTextToSize(viaje.observaciones, 180);
+    pdf.text(split, margin, y);
+    y += split.length * 6;
+  }
+
+  return y;
 };

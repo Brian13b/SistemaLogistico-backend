@@ -3,7 +3,7 @@ import Modal from '../../components/Modal';
 import { conductoresService } from '../../services/ConductoresService';
 import { conductorDocumentosService } from '../../services/ConductorDocumentosServices';
 import { FaDownload, FaFileAlt, FaUser } from 'react-icons/fa';
-import jsPDF from 'jspdf';
+import { generateFichaPDF } from '../../utils/pdfGenerator';
 
 function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
   const [conductor, setConductor] = useState(null);
@@ -48,115 +48,6 @@ function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
     }
   }, [isOpen, conductorId]);
   
-  const handleGeneratePDF = async () => {
-    if (!contentRef.current || !conductor) return;
-    
-    try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const width = pdf.internal.pageSize.getWidth();
-      const margin = 10;
-      let y = margin;
-      
-      // Add title
-      pdf.setFontSize(16);
-      pdf.setFont(undefined, 'bold');
-      pdf.text(`Ficha de Conductor: ${conductor.nombre} ${conductor.apellido}`, margin, y);
-      y += 10;
-      
-      if (conductor.foto) {
-        try {
-          const img = new Image();
-          img.crossOrigin = 'Anonymous';
-          await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-            img.src = conductor.foto;
-          });
-          
-          const imgHeight = 30;
-          pdf.addImage(img, 'JPEG', margin, y, 30, imgHeight);
-          y += imgHeight + 5;
-        } catch (imgError) {
-          console.warn("Error loading conductor image:", imgError);
-        }
-      }
-      
-      pdf.setFontSize(12);
-      pdf.setFont(undefined, 'bold');
-      pdf.text('Información Personal', margin, y);
-      y += 7;
-      
-      pdf.setFont(undefined, 'normal');
-      pdf.text(`DNI: ${conductor.dni || 'No especificado'}`, margin, y);
-      y += 6;
-      pdf.text(`Código: ${conductor.codigo || `C-${String(conductorId).padStart(3, '0')}`}`, margin, y);
-      y += 6;
-      pdf.text(`Estado: ${conductor.estado || 'N/A'}`, margin, y);
-      y += 10;
-      
-      pdf.setFont(undefined, 'bold');
-      pdf.text('Información de Contacto', margin, y);
-      y += 7;
-      
-      pdf.setFont(undefined, 'normal');
-      pdf.text(`Teléfono: ${conductor.numero_contacto || 'No especificado'}`, margin, y);
-      y += 6;
-      pdf.text(`Email: ${conductor.email_contacto || 'No especificado'}`, margin, y);
-      y += 6;
-      pdf.text(`Dirección: ${conductor.direccion || 'No especificada'}`, margin, y);
-      y += 10;
-      
-      pdf.setFont(undefined, 'bold');
-      pdf.text('Información de Licencia', margin, y);
-      y += 7;
-      
-      pdf.setFont(undefined, 'normal');
-      pdf.text(`Número de Licencia: ${conductor.numero_licencia || 'No especificado'}`, margin, y);
-      y += 6;
-      pdf.text(`Fecha Vencimiento: ${formatDate(conductor.fecha_vencimiento) || 'N/A'}`, margin, y);
-      y += 10;
-
-      y += 6;
-      
-      if (documentos && documentos.length > 0) {
-        y += 5;
-        pdf.setFont(undefined, 'bold');
-        pdf.text('Documentos', margin, y);
-        y += 7;
-        
-        pdf.text('Tipo de Documento', margin, y);
-        pdf.text('Fecha Emisión', margin + 80, y);
-        pdf.text('Fecha Vencimiento', margin + 130, y);
-        y += 7;
-        
-        pdf.setFont(undefined, 'normal');
-        documentos.forEach(doc => {
-          pdf.text(doc.tipo_documento || 'No especificado', margin, y);
-          pdf.text(formatDate(doc.fecha_emision) || 'N/A', margin + 80, y);
-          pdf.text(formatDate(doc.fecha_vencimiento) || 'N/A', margin + 130, y);
-          y += 7;
-          
-          if (y > pdf.internal.pageSize.getHeight() - margin) {
-            pdf.addPage();
-            y = margin;
-          }
-        });
-      }
-      
-      pdf.setProperties({
-        title: `Ficha de Conductor: ${conductor.nombre} ${conductor.apellido}`,
-        subject: 'Información de Conductor',
-        creator: 'Sistema de Gestión'
-      });
-      
-      pdf.save(`Ficha_Conductor_${conductor.nombre}_${conductor.apellido}.pdf`);
-      
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-    }
-  };
-
-
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     
@@ -174,6 +65,10 @@ function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
       console.error('Error formatting date:', error);
       return 'Error en fecha';
     }
+  };
+
+  const handleGeneratePDF = async () => {
+    generateFichaPDF('conductor', conductor, documentos, formatDate);
   };
 
   return (
@@ -320,7 +215,7 @@ function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
                   : 'bg-gray-100 hover:bg-gray-200 text-blue-600'
               }`}
             >
-              <FaDownload /> Descargar PDF
+              <FaDownload /> Descargar Ficha
             </button>
             <button 
               onClick={onClose}

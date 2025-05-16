@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { generarReportePDF } from '../utils/pdfGenerator';
+import { generateFichaPDF } from '../utils/pdfGenerator';
 
 export const useReportGenerator = () => {
   const [generando, setGenerando] = useState(false);

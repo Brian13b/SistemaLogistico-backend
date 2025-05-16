@@ -113,7 +113,7 @@ function DocumentoConductorModal({isOpen, onClose, conductorId, conductorNombre,
   const handleDownload = async (documentoId) => {
     try {
       // Hacer solicitud para descargar archivo
-      const response = await viajesDocumentosService.download(documentoId);
+      const response = await conductorDocumentosService.download(documentoId);
 
       // Crear URL de objeto para la descarga
       const url = window.URL.createObjectURL(new Blob([response.data]));

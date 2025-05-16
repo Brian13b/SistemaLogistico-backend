@@ -5,7 +5,7 @@ import { conductoresService } from '../../services/ConductoresService';
 import { vehiculosService } from '../../services/VehiculosService';
 import { viajesDocumentosService } from '../../services/ViajesDocumentosService';
 import { FaDownload, FaFileAlt, FaRoute, FaUser, FaCar } from 'react-icons/fa';
-import jsPDF from 'jspdf';
+import { generateFichaPDF } from '../../utils/pdfGenerator';
 
 function ViajeModal({ isOpen, onClose, viajeId, darkMode }) {
   const [viaje, setViaje] = useState(null);
@@ -74,96 +74,7 @@ function ViajeModal({ isOpen, onClose, viajeId, darkMode }) {
   }, [isOpen, viajeId]);
 
   const handleGeneratePDF = async () => {
-    if (!contentRef.current || !viaje) return;
-    
-    try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const width = pdf.internal.pageSize.getWidth();
-      const margin = 10;
-      let y = margin;
-      
-      // Add title
-      pdf.setFontSize(16);
-      pdf.setFont(undefined, 'bold');
-      pdf.text(`Detalles del Viaje: ${viaje.origen} - ${viaje.destino}`, margin, y);
-      y += 10;
-      
-      pdf.setFontSize(12);
-      pdf.setFont(undefined, 'bold');
-      pdf.text('Información del Viaje', margin, y);
-      y += 7;
-      
-      pdf.setFont(undefined, 'normal');
-      pdf.text(`Código: ${viaje.codigo || `VJ-${String(viajeId).padStart(4, '0')}`}`, margin, y);
-      y += 6;
-      pdf.text(`Estado: ${viaje.estado || 'N/A'}`, margin, y);
-      y += 6;
-      pdf.text(`Origen: ${viaje.origen || 'No especificado'}`, margin, y);
-      y += 6;
-      pdf.text(`Destino: ${viaje.destino || 'No especificado'}`, margin, y);
-      y += 6;
-      pdf.text(`Fecha Salida: ${formatDate(viaje.fecha_salida) || 'N/A'}`, margin, y);
-      y += 6;
-      pdf.text(`Fecha Llegada: ${formatDate(viaje.fecha_llegada) || 'N/A'}`, margin, y);
-      y += 10;
-      
-      // Información del conductor
-      if (conductor) {
-        pdf.setFont(undefined, 'bold');
-        pdf.text('Información del Conductor', margin, y);
-        y += 7;
-        
-        pdf.setFont(undefined, 'normal');
-        pdf.text(`Nombre: ${conductor.nombre} ${conductor.apellido}`, margin, y);
-        y += 6;
-        pdf.text(`DNI: ${conductor.dni || 'No especificado'}`, margin, y);
-        y += 6;
-        pdf.text(`Licencia: ${conductor.numero_licencia || 'No especificado'}`, margin, y);
-        y += 6;
-        pdf.text(`Teléfono: ${conductor.numero_contacto || 'No especificado'}`, margin, y);
-        y += 10;
-      }
-      
-      // Información del vehículo
-      if (vehiculo) {
-        pdf.setFont(undefined, 'bold');
-        pdf.text('Información del Vehículo', margin, y);
-        y += 7;
-        
-        pdf.setFont(undefined, 'normal');
-        pdf.text(`Patente: ${vehiculo.patente || 'No especificada'}`, margin, y);
-        y += 6;
-        pdf.text(`Marca: ${vehiculo.marca || 'No especificada'}`, margin, y);
-        y += 6;
-        pdf.text(`Modelo: ${vehiculo.modelo || 'No especificado'}`, margin, y);
-        y += 6;
-        pdf.text(`Año: ${vehiculo.anio || 'No especificado'}`, margin, y);
-        y += 10;
-      }
-      
-      // Observaciones
-      if (viaje.observaciones) {
-        pdf.setFont(undefined, 'bold');
-        pdf.text('Observaciones', margin, y);
-        y += 7;
-        
-        pdf.setFont(undefined, 'normal');
-        const splitText = pdf.splitTextToSize(viaje.observaciones, width - (margin * 2));
-        pdf.text(splitText, margin, y);
-        y += splitText.length * 6;
-      }
-      
-      pdf.setProperties({
-        title: `Detalles Viaje ${viaje.origen}-${viaje.destino}`,
-        subject: 'Información de Viaje',
-        creator: 'Sistema de Gestión'
-      });
-      
-      pdf.save(`Detalles_Viaje_${viaje.origen}_${viaje.destino}.pdf`);
-      
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-    }
+    generateFichaPDF('viaje', viaje, documentos, formatDate);
   };
 
   const formatDate = (dateString) => {

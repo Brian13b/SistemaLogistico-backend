@@ -17,7 +17,7 @@ class DocumentoVehiculoResponse(DocumentoVehiculoBase):
     id: int = Field(..., description="ID del documento del conductor")
     archivo_url: str = Field(..., min_length=5, max_length=255, description="URL del archivo del documento")
     archivo_nombre: str = Field(..., min_length=3, max_length=255, description="Nombre original del archivo del documento")
-    fecha_carga: datetime = Field(..., description="Fecha de carga del documento")
+    fecha_creacion: datetime = Field(..., description="Fecha de carga del documento")
     fecha_actualizacion: datetime = Field(..., description="Fecha de actualización del documento")
 
     class Config:

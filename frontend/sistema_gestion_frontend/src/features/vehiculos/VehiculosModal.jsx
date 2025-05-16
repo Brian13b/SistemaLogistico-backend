@@ -3,7 +3,7 @@ import Modal from '../../components/Modal';
 import { vehiculosService } from '../../services/VehiculosService';
 import { vehiculoDocumentosService } from '../../services/VehiculoDocumentosServices';
 import { FaDownload, FaFileAlt } from 'react-icons/fa';
-import jsPDF from 'jspdf';
+import { generateFichaPDF } from '../../utils/pdfGenerator';
 
 function VehiculoModal({ isOpen, onClose, vehiculoId, darkMode }) {
   const [vehiculo, setVehiculo] = useState(null);
@@ -80,83 +80,7 @@ function VehiculoModal({ isOpen, onClose, vehiculoId, darkMode }) {
   };
 
   const handleGeneratePDF = async () => {
-    if (!contentRef.current) return;
-    
-    try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const width = pdf.internal.pageSize.getWidth();
-      const margin = 10;
-      let y = margin;
-  
-      // Add title
-      pdf.setFontSize(16);
-      pdf.setFont(undefined, 'bold');
-      pdf.text(`Ficha del Vehiculo: ${vehiculo.marca} ${vehiculo.modelo}`, margin, y);
-      y += 10;
-      
-      pdf.setFontSize(12);
-      pdf.setFont(undefined, 'bold');
-      pdf.text('Información del Vehículo:', margin, y);
-      y += 7;
-      
-      pdf.setFont(undefined, 'normal');
-      pdf.text(`Patente: ${vehiculo.patente || 'No especificado'}`, margin, y);
-      y += 6;
-      pdf.text(`Código: ${vehiculo.codigo || 'No especificado'}`, margin, y);
-      y += 6;
-      pdf.text(`Estado: ${vehiculo.estado || 'N/A'}`, margin, y);
-      y += 6;
-      pdf.text(`Año: ${vehiculo.anio || 'N/A'}`, margin, y);
-      y += 6;
-      pdf.text(`Tipo: ${vehiculo.tipo || 'N/A'}`, margin, y);
-      y += 6;
-      pdf.text(`Tara: ${vehiculo.tara || 'N/A'}`, margin, y);
-      y += 6;
-      pdf.text(`Carga Máxima: ${vehiculo.carga_maxima || 'N/A'}`, margin, y);
-      y += 6;
-      pdf.text(`Kilometraje: ${vehiculo.kilometraje || 'N/A'}`, margin, y);
-      y += 10;
-  
-      // Sección de Documentos
-      if (documentos && documentos.length > 0) {
-        y += 5;
-        pdf.setFont(undefined, 'bold');
-        pdf.text('Documentos', margin, y);
-        y += 7;
-        
-        pdf.text('Tipo de Documento', margin, y);
-        pdf.text('Fecha Emisión', margin + 80, y);
-        pdf.text('Fecha Vencimiento', margin + 130, y);
-        y += 7;
-        
-        pdf.setFont(undefined, 'normal');
-        documentos.forEach(doc => {
-          pdf.text(doc.tipo_documento || 'No especificado', margin, y);
-          pdf.text(formatDate(doc.fecha_emision) || 'N/A', margin + 80, y);
-          pdf.text(formatDate(doc.fecha_vencimiento) || 'N/A', margin + 130, y);
-          y += 7;
-          
-          // Añadir nueva página si es necesario
-          if (y > pdf.internal.pageSize.getHeight() - margin) {
-            pdf.addPage();
-            y = margin;
-          }
-        });
-      }
-      
-      // Configuración de propiedades del PDF
-      pdf.setProperties({
-        title: `Ficha Vehículo: ${vehiculo.marca} ${vehiculo.modelo}`,
-        subject: 'Información de Vehículo',
-        creator: 'Sistema de Gestión'
-      });
-      
-      // Guardar el archivo PDF
-      pdf.save(`Ficha_Vehiculo_${vehiculo.marca}_${vehiculo.modelo}.pdf`);
-      
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-    }
+    generateFichaPDF('vehiculo', vehiculo, documentos, formatDate);
   };
   
   const formatDate = (dateString) => {
@@ -256,55 +180,45 @@ function VehiculoModal({ isOpen, onClose, vehiculoId, darkMode }) {
             </div>
           </div>
 
-          {/* Licencia */}
-          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-            <h3 className="text-lg font-semibold mb-3">Información de Cedula</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">              
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Número de Cedula</p>
-                <p>Numero de cedula</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Fecha Vencimiento</p>
-                <p>Fecha de vencimiento de cedula verde</p>
-              </div>
-            </div>
-          </div>
-
           {/* Documentos */}
           <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-            <h3 className="text-lg font-semibold mb-3">Documentos</h3>
+            <h3 className="text-lg font-semibold mb-3">Documentos del Vehiculo</h3>
             {documentos && documentos.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {documentos.map(doc => (
-                  <div 
-                    key={doc.id} 
-                    className={`p-3 rounded border flex items-center justify-between ${
-                      darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'
-                    }`}
-                  >
-                    <div className="flex items-center">
-                      <FaFileAlt className="mr-2" />
-                      <div>
-                        <p className="font-medium">{doc.tipo_documento || 'No especificado'}</p>
-                      </div>
+              <div className="grid grid-cols-1">
+                {documentos.map((docVehiculo) => (
+                  <div key={docVehiculo.id} className={`p-3 rounded border grid grid-cols-4 ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'}`}>
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Tipo de Documento</p>
+                      <p>{docVehiculo.tipo_documento || 'No especificado'}</p>
                     </div>
-                    <button 
-                      onClick={() => handleDownload(doc.id, doc.nombre_original)}
-                      className={`text-sm px-2 py-1 rounded-full ${
-                        darkMode 
-                          ? 'bg-gray-700 hover:bg-gray-600 text-yellow-500' 
-                          : 'bg-gray-100 hover:bg-gray-200 text-blue-600'
-                      }`}
-                    >
-                      <FaDownload />
-                    </button>
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Nombre del Documento</p>
+                      <p>{docVehiculo.archivo_nombre || 'No especificado'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Número de Documento</p>
+                      <p>{docVehiculo.codigo_documento || 'No especificado'}</p>
+                    </div>
+
+                    <div>
+                      <a 
+                        href={docVehiculo.archivo_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className={`px-4 py-2 rounded flex items-center gap-2 ${
+                          darkMode 
+                            ? 'bg-gray-800 hover:bg-gray-600 text-yellow-500' 
+                            : 'bg-gray-200 hover:bg-gray-200 text-blue-600'
+                        }`}>
+                        <FaDownload /> Descargar
+                      </a>
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
               <p className="text-gray-500 italic">No hay documentos disponibles</p>
-            )}
+            )} 
           </div>
 
           {/* Botones de acción */}

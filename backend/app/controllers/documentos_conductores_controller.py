@@ -72,8 +72,8 @@ async def actualizar_documento_conductor(documento_id: int, documento_data: str 
         raise HTTPException(status_code=400, detail=f"Error al procesar la solicitud: {str(e)}")
 
 @router.delete("/documentos_conductores/{documento_id}", response_model=DocumentoConductorResponse)
-def eliminar_documento_conductor(documento_id: int, db: Session = Depends(get_db)):
-    db_documento = eliminar_documento_conductor(db=db, documento_id=documento_id)
+def eliminar_documento_conductor_endpoint(documento_id: int, db: Session = Depends(get_db)):
+    db_documento = eliminar_documento_conductor(documento_id=documento_id, db=db)
     if db_documento is None:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     return db_documento
@@ -81,7 +81,7 @@ def eliminar_documento_conductor(documento_id: int, db: Session = Depends(get_db
 # Otras operaciones relacionadas con Documentos
 
 @router.get("/documentos_conductores/vencidos/", response_model=list[DocumentoConductorResponse])
-def obtener_documentos_vencidos(db: Session = Depends(get_db)):
+def leer_documentos_vencidos(db: Session = Depends(get_db)):
     """Obtener documentos de conductores vencidos."""
     return obtener_documentos_vencidos(db=db)
 
