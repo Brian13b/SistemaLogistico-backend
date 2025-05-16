@@ -1,19 +1,16 @@
 import api from './api';
 
 export const viajesDocumentosService = {
-    getAll: () => api.get(`/documentos_viajes`),
-    getById: (documentoId) => api.get(`/documentos_viajes/${documentoId}`),
     create: (data) => {
-        const formData = new FormData();
-        formData.append('documento_data', JSON.stringify(data.documento_data));
-        formData.append('archivo', data.archivo);
-      
-        return api.post(`/documentos_viajes/`, formData, {
+        return api.post(`/documentos_viajes/`, data, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         });
     },
+    getAll: () => api.get(`/documentos_viajes`),
+    getById: (documentoId) => api.get(`/documentos_viajes/${documentoId}`),
+    getAllByViaje: (viajeId) => api.get(`/documentos_viajes/viajes/${viajeId}`),
     update: (documentoId, data) => {
         const formData = new FormData();
         formData.append('documento_data', JSON.stringify(data.documento_data));
@@ -28,5 +25,7 @@ export const viajesDocumentosService = {
         });
     },
     deleteDocumento: (documentoId) => api.delete(`/documentos_viajes/${documentoId}`),
-    getAllByViaje: (viajeId) => api.get(`/documentos_viajes/viajes/${viajeId}`),
+    download: (documentoId) => api.get(`/documentos_viajes/${documentoId}/descargar`, {
+        responseType: 'blob' 
+    }),    
 };

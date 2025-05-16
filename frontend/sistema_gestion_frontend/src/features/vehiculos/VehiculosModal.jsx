@@ -22,9 +22,6 @@ function VehiculoModal({ isOpen, onClose, vehiculoId, darkMode }) {
 
     if (isOpen && vehiculoId) {
       const fetchVehiculoData = async () => {
-        console.log('Fetching vehiculo data...');
-        console.log('Vehiculo ID:', vehiculoId);
-
         try {
           setLoading(true);
 
@@ -37,14 +34,12 @@ function VehiculoModal({ isOpen, onClose, vehiculoId, darkMode }) {
           }
           catch (err) {
             setError('Error al cargar los documentos del vehículo');
-            console.error(err);
           }
 
           setError(null);
 
         } catch (err) {
           setError('Error al cargar los datos del vehículo');
-          console.error(err);
         } finally {
           setLoading(false);
         }

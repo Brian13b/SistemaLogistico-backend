@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Modal from '../../components/Modal';
 import { conductoresService } from '../../services/ConductoresService';
 import { conductorDocumentosService } from '../../services/ConductorDocumentosServices';
-import { FaDownload, FaFileAlt } from 'react-icons/fa';
+import { FaDownload, FaFileAlt, FaUser } from 'react-icons/fa';
 import jsPDF from 'jspdf';
 
 function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
@@ -32,14 +32,12 @@ function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
             const documentosRes = await conductorDocumentosService.getAllByConductor(conductorId);
             setDocumentos(documentosRes.data);
           } catch(err) {
-            console.error(err);
             setError('Error al cargar los documentos del conductor');
           }
           
           setError(null);
           
         } catch (err) {
-          console.error("Error fetching conductor data:", err);
           setError('Error al cargar los datos del conductor');
         } finally {
           setLoading(false);
@@ -49,39 +47,9 @@ function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
       fetchConductorData();
     }
   }, [isOpen, conductorId]);
-
-  const handleDownload = async (documentoId, nombre) => {
-    try {
-      const nombreArchivo = nombre || `documento-${documentoId}`;
-      const nombreConExtension = `${nombreArchivo}.pdf`;
-  
-      const response = await fetch(`/api/documentos_conductor/${documentoId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-  
-      if (!response.ok) throw new Error('Error al descargar el documento');
-  
-      const contentType = response.headers.get('content-type');
-      const blob = await response.blob();
-
-      const url = window.URL.createObjectURL(new Blob([blob], { type: contentType }));
-
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = nombreConExtension; 
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error descargando documento:', error);
-    }
-  };
   
   const handleGeneratePDF = async () => {
-    if (!contentRef.current) return;
+    if (!contentRef.current || !conductor) return;
     
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -195,7 +163,13 @@ function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return 'Fecha inválida';
-      return date.toLocaleDateString('es-AR');
+      return date.toLocaleDateString('es-AR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     } catch (error) {
       console.error('Error formatting date:', error);
       return 'Error en fecha';
@@ -256,7 +230,10 @@ function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
           
           {/* Información de contacto */}
           <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-            <h3 className="text-lg font-semibold mb-3">Información de Contacto</h3>
+            <div className="flex items-center gap-3 mb-3">
+              <FaUser className="text-blue-500" />
+              <h3 className="text-lg font-semibold">Información de Contacto</h3>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Teléfono</p>
@@ -273,7 +250,7 @@ function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
             </div>
           </div>
           
-          {/* Licencia */}
+          {/* Licencia 
           <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
             <h3 className="text-lg font-semibold mb-3">Información de Licencia</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -287,35 +264,44 @@ function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
               </div>
             </div>
           </div>
-          
+          */}
+
           {/* Documentos */}
           <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-            <h3 className="text-lg font-semibold mb-3">Documentos</h3>
+            <div className="flex items-center gap-3 mb-3">
+              <FaFileAlt className="text-blue-500" />
+              <h3 className="text-lg font-semibold">Documentos</h3>
+            </div>
             {documentos && documentos.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1">
                 {documentos.map(doc => (
-                  <div 
-                    key={doc.id} 
-                    className={`p-3 rounded border flex items-center justify-between ${
-                      darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'
-                    }`}
-                  >
-                    <div className="flex items-center">
-                      <FaFileAlt className="mr-2" />
-                      <div>
-                        <p className="font-medium">{doc.tipo_documento || 'No especificado'}</p>
-                      </div>
+                  <div key={doc.id} className={`p-3 rounded border flex items-center justify-between ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'}`}>
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Tipo de Documento</p>
+                      <p>{doc.tipo_documento || 'No especificado'}</p>
                     </div>
-                    <button 
-                      onClick={() => handleDownload(doc.id, doc.nombre_original)}
-                      className={`text-sm px-2 py-1 rounded-full ${
-                        darkMode 
-                          ? 'bg-gray-700 hover:bg-gray-600 text-yellow-500' 
-                          : 'bg-gray-100 hover:bg-gray-200 text-blue-600'
-                      }`}
-                    >
-                      <FaDownload />
-                    </button>
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Nombre del Documento</p>
+                      <p>{doc.archivo_nombre || 'No especificado'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Número de Documento</p>
+                      <p>{doc.codigo_documento || 'No especificado'}</p>
+                    </div>
+
+                    <div>
+                      <a 
+                        href={doc.archivo_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className={`px-4 py-2 rounded flex items-center gap-2 ${
+                          darkMode 
+                            ? 'bg-gray-800 hover:bg-gray-600 text-yellow-500' 
+                            : 'bg-gray-200 hover:bg-gray-200 text-blue-600'
+                        }`}>
+                        <FaDownload /> Descargar
+                      </a>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -326,7 +312,6 @@ function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
           
           {/* Botones de acción */}
           <div className="flex justify-end space-x-4 mt-6">
-            {/* Ejemplo de botones de acción */}
             <button 
               onClick={handleGeneratePDF}
               className={`px-4 py-2 rounded flex items-center gap-2 ${
@@ -335,7 +320,7 @@ function ConductorModal({ isOpen, onClose, conductorId, darkMode }) {
                   : 'bg-gray-100 hover:bg-gray-200 text-blue-600'
               }`}
             >
-              <FaDownload /> Descargar Ficha
+              <FaDownload /> Descargar PDF
             </button>
             <button 
               onClick={onClose}

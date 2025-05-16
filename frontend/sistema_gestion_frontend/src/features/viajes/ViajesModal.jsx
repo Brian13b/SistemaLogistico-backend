@@ -3,6 +3,7 @@ import Modal from '../../components/Modal';
 import { viajesService } from '../../services/ViajesService';
 import { conductoresService } from '../../services/ConductoresService';
 import { vehiculosService } from '../../services/VehiculosService';
+import { viajesDocumentosService } from '../../services/ViajesDocumentosService';
 import { FaDownload, FaFileAlt, FaRoute, FaUser, FaCar } from 'react-icons/fa';
 import jsPDF from 'jspdf';
 
@@ -10,6 +11,7 @@ function ViajeModal({ isOpen, onClose, viajeId, darkMode }) {
   const [viaje, setViaje] = useState(null);
   const [conductor, setConductor] = useState(null);
   const [vehiculo, setVehiculo] = useState(null);
+  const [documentos, setDocumentos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const contentRef = useRef(null);
@@ -19,6 +21,7 @@ function ViajeModal({ isOpen, onClose, viajeId, darkMode }) {
       setViaje(null);
       setConductor(null);
       setVehiculo(null);
+      setDocumentos([]);
       setError(null);
       return;
     }
@@ -28,11 +31,17 @@ function ViajeModal({ isOpen, onClose, viajeId, darkMode }) {
         try {
           setLoading(true);
           
-          // Obtener datos del viaje
           const viajeRes = await viajesService.getById(viajeId);
           setViaje(viajeRes.data);
           
-          // Obtener datos del conductor si existe
+          try {
+            const documentosRes = await viajesDocumentosService.getAllByViaje(viajeId);
+            setDocumentos(documentosRes.data);
+          } catch (err) {
+            console.error("Error al cargar documentos del viaje:", err);
+            setError('Error al cargar los documentos del viaje');
+          }
+
           if (viajeRes.data.conductor_id) {
             try {
               const conductorRes = await conductoresService.getById(viajeRes.data.conductor_id);
@@ -42,7 +51,6 @@ function ViajeModal({ isOpen, onClose, viajeId, darkMode }) {
             }
           }
           
-          // Obtener datos del vehículo si existe
           if (viajeRes.data.vehiculo_id) {
             try {
               const vehiculoRes = await vehiculosService.getById(viajeRes.data.vehiculo_id);
@@ -55,7 +63,6 @@ function ViajeModal({ isOpen, onClose, viajeId, darkMode }) {
           setError(null);
           
         } catch (err) {
-          console.error("Error fetching viaje data:", err);
           setError('Error al cargar los datos del viaje');
         } finally {
           setLoading(false);
@@ -314,49 +321,48 @@ function ViajeModal({ isOpen, onClose, viajeId, darkMode }) {
             </div>
           )}
 
-          {/* Informacion adicional */}
+          {/* Documentos */}
           <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
             <div className="flex items-center gap-3 mb-3">
               <FaFileAlt className="text-blue-500" />
               <h3 className="text-lg font-semibold">Documento de Viaje</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Tipo de Documento</p>
-                <p>{viaje.tipo_documento || 'No especificado'}</p>
+            {documentos && documentos.length > 0 ? (
+              <div className="grid grid-cols-1">
+                {documentos.map((docViaje) => (
+                  <div key={docViaje.id} className={`p-3 rounded border grid grid-cols-4 ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'}`}>
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Tipo de Documento</p>
+                      <p>{docViaje.tipo_documento || 'No especificado'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Nombre del Documento</p>
+                      <p>{docViaje.archivo_nombre || 'No especificado'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Número de Documento</p>
+                      <p>{docViaje.codigo_documento || 'No especificado'}</p>
+                    </div>
+
+                    <div>
+                      <a 
+                        href={docViaje.archivo_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className={`px-4 py-2 rounded flex items-center gap-2 ${
+                          darkMode 
+                            ? 'bg-gray-800 hover:bg-gray-600 text-yellow-500' 
+                            : 'bg-gray-200 hover:bg-gray-200 text-blue-600'
+                        }`}>
+                        <FaDownload /> Descargar
+                      </a>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Número de Documento</p>
-                <p>{viaje.numero_documento || 'No especificado'}</p>
-              </div>
-              
-              <div>
-                <a href={viaje.documento_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className={`px-4 py-2 rounded flex items-center gap-2 ${
-                    darkMode 
-                      ? 'bg-gray-800 hover:bg-gray-600 text-yellow-500' 
-                      : 'bg-gray-200 hover:bg-gray-200 text-blue-600'
-                  }`}>
-                  Ver Documento
-                </a>
-              </div>
-              <div>
-                <a href={
-                  viaje.documento_url} 
-                  download 
-                  className={`px-4 py-2 rounded flex items-center gap-2 ${
-                    darkMode 
-                      ? 'bg-gray-800 hover:bg-gray-600 text-yellow-500' 
-                      : 'bg-gray-200 hover:bg-gray-200 text-blue-600'
-                  }`}
-                  title="Descargar Documento"
-                >
-                  Descargar
-                </a>
-              </div>
-            </div>
+            ) : (
+              <p className="text-gray-500 italic">No hay documentos disponibles</p>
+            )}  
           </div>
           
           {/* Botones de acción */}

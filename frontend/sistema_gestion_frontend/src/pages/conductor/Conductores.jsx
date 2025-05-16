@@ -254,7 +254,6 @@ function Conductores({ darkMode }) {
         )}
       </div>
 
-      {/* Modal para ver detalles */}
       <ConductorModal 
         isOpen={viewModalOpen}
         onClose={() => setViewModalOpen(false)}
@@ -262,7 +261,6 @@ function Conductores({ darkMode }) {
         darkMode={darkMode}
       />
 
-      {/* Modal para crear/editar */}
       <ConductorNuevoModal 
         isOpen={editModalOpen}
         onClose={() => {
@@ -273,7 +271,6 @@ function Conductores({ darkMode }) {
         darkMode={darkMode}
       />
       
-      {/* Modal para gestionar documentos */}
       <DocumentoConductorModal 
         isOpen={documentosModalOpen}
         onClose={() => {
