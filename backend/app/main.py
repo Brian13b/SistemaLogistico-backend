@@ -56,3 +56,12 @@ try:
     drive_service = build('drive', 'v3', credentials=credentials)
 except Exception as e:
     print(f"Error al inicializar el servicio de Google Drive: {e}")
+
+@app.get("/health")
+async def health_check():
+    """Health check para el API Gateway"""
+    return {
+        "status": "healthy",
+        "service": "gestion", 
+        "timestamp": "2024-06-10T00:00:00Z"
+    }
