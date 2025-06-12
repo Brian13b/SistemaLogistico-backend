@@ -1,8 +1,5 @@
 import os
 from pydantic_settings import BaseSettings
-from dotenv import load_dotenv
-
-load_dotenv()
 
 class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv("DATABASE_URL")
@@ -11,14 +8,14 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
 
     FRONTEND_URL: str = os.getenv("FRONTEND_URL")
-    BACKEND_URL: str = "http://localhost:8001"
+    BACKEND_URL: str = "http://localhost:8000"
 
     # Configuraciones de Email
-    SMTP_SERVER: str = os.getenv("SMTP_SERVER")
-    SMTP_PORT: int = os.getenv("SMTP_PORT")
-    EMAIL_USERNAME: str = os.getenv("EMAIL_USERNAME")
-    EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD")
-    EMAIL_FROM: str = os.getenv("EMAIL_FROM")
+    SMTP_SERVER: str = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+    SMTP_PORT: int = os.getenv("SMTP_PORT", 587)
+    EMAIL_USERNAME: str = os.getenv("EMAIL_USERNAME", "blogistic.soporte@gmail.com")
+    EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD", "Logistica13")
+    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "Blogistic Soporte <blogistic.soporte@gmail.com>")
 
     # Google Drive
     GOOGLE_TYPE: str = os.getenv("GOOGLE_TYPE")
