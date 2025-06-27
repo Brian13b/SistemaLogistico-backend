@@ -1,23 +1,35 @@
-# Módulo de Gestión de Flotas
+# 🚀 Backend para la aplicación logística.
 
-Este módulo es uno de los tres componentes principales del Sistema de Gestión de Flotas. Se encarga de la administración y seguimiento de los vehículos, conductores y viajes.
+🚗 Backend para el sistema de gestión de flotas.
 
-## Funcionalidades
+Este repositorio contiene el backend de un sistema de gestión de flotas diseñado para administrar vehículos, conductores y viajes. Está construido con **FastAPI** en **Python**, ofreciendo una API RESTful rápida, segura y escalable.
 
-*   **Gestión de Vehículos:** Registro, actualización y eliminación de información de vehículos (marca, modelo, patente, estado, etc.).
-*   **Gestión de Conductores:** Registro, actualización y eliminación de información de conductores (datos personales, licencias, etc.).
-*   **Gestión de Viajes:** Creación, seguimiento y finalización de viajes, asignando vehículos y conductores.
-*   **Reportes:** Generación de informes sobre el uso de vehículos, rendimiento de conductores y estadísticas de viajes.
+---
 
-## Tecnologías Utilizadas
+🌟 **¿Qué hace este microservicio?**  
+- Proporciona una API para gestionar vehículos, conductores (empleados) y viajes.  
+- Permite la creación, seguimiento y finalización de viajes asignando recursos.  
+- Implementa autenticación y autorización con **JWT** para un acceso seguro.
 
-*   **Backend:** Python con FastAPI
-*   **Base de Datos:** PostgreSQL
+---
 
-## Instalación
+🔧 **Características principales**  
+- 🚘 CRUD completo para Vehiculos, Empleados y Viajes.  
+- 👤 Gestión de papeles.  
+- 🗺️ Creación y seguimiento de viajes con asignación de vehículo y conductor.  
+- 📊 Generación de reportes.  
+- 🔐 Autenticación y autorización segura con **JSON Web Tokens (JWT)**.
 
-1.  Clonar el repositorio: `git clone`
-2.  Navegar al directorio del módulo: `cd Backend`
-3.  Activar el entorno virtual: `.\venv\Scripts\activate`
-4.  Instalar dependencias: `pip install -r requirements.txt`
-5.  Iniciar el servidor: `uvicorn main:app --reload`
+---
+
+🛡️ **Tecnologías Usadas**  
+- 🖥️ Lenguaje: Python  
+- ⚡ Framework: FastAPI  
+- 🗄️ Base de datos: PostgreSQL  
+- 🔐 Autenticación: JSON Web Tokens (JWT)
+
+---
+
+🌱 **Futuras actualizaciones** 
+- 🔄 Soporte para notificaciones automáticas (email/SMS).
+
