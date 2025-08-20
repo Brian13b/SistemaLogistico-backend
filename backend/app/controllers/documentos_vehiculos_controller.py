@@ -6,6 +6,7 @@ from fastapi.responses import StreamingResponse
 from app.schemas.vehiculos_documentos_schemas import DocumentoVehiculoCreate, DocumentoVehiculoResponse
 from app.crud.documentos_vehiculo_crud import (
     crear_documento_vehiculo_con_archivo,
+    obtener_documentos_proximos_a_vencer,
     obtener_documentos_vehiculo_por_vehiculo,
     actualizar_documento_vehiculo_con_archivo, 
     eliminar_documento_vehiculo, 
@@ -84,6 +85,11 @@ def eliminar_documento_vehiculo_endpoint(documento_vehiculo_id: int, db: Session
 def leer_documentos_vehiculo_vencidos(db: Session = Depends(get_db)):
     """Obtener documentos de vehículos vencidos."""
     return obtener_documentos_vehiculo_vencidos(db=db)
+
+@router.get("/documentos_vehiculos/proximos_vencimientos/{dias}", response_model=list[DocumentoVehiculoResponse])
+def leer_documentos_vehiculo_proximos_vencimientos( dias: int = 30, db: Session = Depends(get_db)):
+    """Obtener documentos de vehículos próximos a vencer."""
+    return obtener_documentos_proximos_a_vencer(db=db, dias=dias)
 
 @router.get("/documentos_vehiculos/{documento_vehiculo_id}/descargar")
 async def descargar_documento_vehiculo(documento_vehiculo_id: int, db: Session = Depends(get_db)):

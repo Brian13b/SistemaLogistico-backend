@@ -115,7 +115,7 @@ class GoogleDriveService:
                 try:
                     os.remove(temp_file_path)
                 except Exception as e:
-                    print(f"No se pudo eliminar el archivo temporal {temp_file_path}: {str(e)}")
+                    # print(f"No se pudo eliminar el archivo temporal {temp_file_path}: {str(e)}")
                     # Programar eliminación para más tarde (opcional)
                     self._schedule_file_deletion(temp_file_path)
     
@@ -127,12 +127,12 @@ class GoogleDriveService:
                 try:
                     if os.path.exists(file_path):
                         os.remove(file_path)
-                        print(f"Archivo temporal eliminado con éxito en intento {i+1}: {file_path}")
+                        # print(f"Archivo temporal eliminado con éxito en intento {i+1}: {file_path}")
                         break
                 except Exception as e:
                     if i == retries - 1:
-                        print(f"No se pudo eliminar el archivo temporal después de {retries} intentos: {file_path}")
-        
+                        # print(f"No se pudo eliminar el archivo temporal después de {retries} intentos: {file_path}")
+                        pass
         # Iniciar un thread para manejar la eliminación
         import threading
         threading.Thread(target=delete_later, daemon=True).start()

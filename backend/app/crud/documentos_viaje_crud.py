@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.models.viaje_documentos import DocumentoViaje
 from app.schemas.viajes_documentos_schemas import DocumentoViajeCreate
 from app.services.google_drive import drive_service
@@ -71,3 +71,11 @@ def obtener_documento_viaje(db: Session, documento_id: int):
 
 def obtener_documentos_viaje_por_tipo(db: Session, tipo_documento: str):
     return db.query(DocumentoViaje).filter(DocumentoViaje.tipo_documento == tipo_documento).all()
+
+def obtener_documentos_proximos_a_vencer(db: Session, dias: int = 30):
+    hoy = datetime.now().date()
+    fecha_limite = hoy + timedelta(days=dias)
+    return db.query(DocumentoViaje).filter(
+        DocumentoViaje.fecha_vencimiento >= hoy,
+        DocumentoViaje.fecha_vencimiento <= fecha_limite
+    ).all()

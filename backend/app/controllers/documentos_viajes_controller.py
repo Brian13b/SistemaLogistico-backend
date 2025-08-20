@@ -8,6 +8,7 @@ from app.schemas.viajes_documentos_schemas import DocumentoViajeResponse, Docume
 from app.crud.documentos_viaje_crud import (
     crear_documento_viaje_con_archivo, 
     obtener_documento_viaje,
+    obtener_documentos_proximos_a_vencer,
     obtener_documentos_viaje_por_viaje, 
     obtener_documentos_viajes, 
     actualizar_documento_viaje_con_archivo, 
@@ -83,6 +84,11 @@ def eliminar_documento_viaje_endpoint(documento_id: int, db: Session = Depends(g
     if db_documento is None:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     return db_documento
+
+@router.get("/documentos_viajes/proximos_vencimientos/{dias}", response_model=list[DocumentoViajeResponse])
+def leer_documentos_proximos_vencimientos(dias: int = 30, db: Session = Depends(get_db)):
+    """Obtener documentos de viajes próximos a vencer."""
+    return obtener_documentos_proximos_a_vencer(db=db, dias=dias)
 
 @router.get("/documentos_viajes/{documento_id}/descargar")
 async def descargar_documento_viaje(documento_id: int, db: Session = Depends(get_db)):

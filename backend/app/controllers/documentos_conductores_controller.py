@@ -11,6 +11,7 @@ from app.crud.documentos_conductor_crud import (
     eliminar_documento_conductor,
     obtener_documentos_conductores,
     obtener_documento_conductor,
+    obtener_documentos_proximos_a_vencer,
     obtener_documentos_vencidos
 )
 from app.database.database import get_db
@@ -84,6 +85,11 @@ def eliminar_documento_conductor_endpoint(documento_id: int, db: Session = Depen
 def leer_documentos_vencidos(db: Session = Depends(get_db)):
     """Obtener documentos de conductores vencidos."""
     return obtener_documentos_vencidos(db=db)
+
+@router.get("/documentos_conductores/proximos_vencimientos/{dias}", response_model=list[DocumentoConductorResponse])
+def leer_documentos_proximos_vencimientos(dias: int = 30, db: Session = Depends(get_db)):
+    """Obtener documentos de conductores próximos a vencer."""
+    return obtener_documentos_proximos_a_vencer(db=db, dias=dias)
 
 @router.get("/documentos_conductores/{documento_id}/descargar")
 async def descargar_documento_conductor(documento_id: int, db: Session = Depends(get_db)):
