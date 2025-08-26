@@ -111,14 +111,29 @@ def send_password_reset_email(to_email: str, reset_link: str) -> Dict[str, bool]
         <html>
         <head>
             <meta charset="UTF-8">
+            <title>Recuperación de Contraseña</title>
         </head>
-        <body>
-            <h2>Recuperación de Contraseña</h2>
-            <p>Hemos recibido una solicitud para restablecer tu contraseña.</p>
-            <p>Haz clic en el siguiente enlace para cambiar tu contraseña:</p>
-            <a href="{reset_link}">Restablecer Contraseña</a>
-            <p>Si no solicitaste este cambio, ignora este correo.</p>
-            <small>El enlace expirará en 1 hora.</small>
+        <body style="background:#f4f6f8;padding:0;margin:0;">
+            <div style="max-width:480px;margin:40px auto;background:#fff;border-radius:12px;box-shadow:0 2px 16px rgba(0,0,0,0.08);padding:32px;font-family:Arial,sans-serif;">
+                <div style="text-align:center;margin-bottom:24px;">
+                    <img src="../img/Logo-removebg-preview.png" alt="Logo" style="width:64px;height:64px;">
+                </div>
+                <h2 style="color:#1976d2;text-align:center;">Recuperación de Contraseña</h2>
+                <p>Hola,</p>
+                <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta. Si no fuiste tú, ignora este correo y tu contraseña seguirá igual.</p>
+                <p style="text-align:center;margin:24px 0;">
+                    <a href="{reset_link}" style="background:#1976d2;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">Restablecer Contraseña</a>
+                </p>
+                <p>Este enlace expirará en <b>1 hora</b> por seguridad.</p>
+                <hr style="margin:32px 0;">
+                <p style="font-size:13px;color:#888;text-align:center;">
+                    Si tienes dudas o necesitas ayuda, contáctanos.<br>
+                    <a href="mailto:blogistic.soporte@gmail.com" style="color:#1976d2;">blogistic.soporte@gmail.com</a>
+                </p>
+                <p style="font-size:12px;color:#bbb;text-align:center;">
+                    © 2025 B Logistica - Sistema Logístico. Todos los derechos reservados.
+                </p>
+            </div>
         </body>
         </html>
         """
