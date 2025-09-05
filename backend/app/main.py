@@ -3,7 +3,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from fastapi import FastAPI
 from auth.usuario_controller import router as auth_router
-from app.controllers import conductores_controller, vehiculos_controller, viajes_controller, documentos_conductores_controller, documentos_vehiculos_controller, documentos_viajes_controller
+from app.controllers import conductores_controller, vehiculos_controller, viajes_controller, documentos_conductores_controller, documentos_vehiculos_controller, documentos_viajes_controller, gastos_controller, ingresos_controller
 from app.database.database import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -24,6 +24,8 @@ app.include_router(vehiculos_controller.router, prefix="/api", tags=["Vehiculos"
 app.include_router(documentos_vehiculos_controller.router, prefix="/api", tags=["Documentos Vehiculos"])
 app.include_router(viajes_controller.router, prefix="/api", tags=["Viajes"])
 app.include_router(documentos_viajes_controller.router, prefix="/api", tags=["Documentos Viajes"])
+app.include_router(gastos_controller.router, prefix="/api", tags=["Gastos"])
+app.include_router(ingresos_controller.router, prefix="/api", tags=["Ingresos"])
 
 app.add_middleware(
     CORSMiddleware,
