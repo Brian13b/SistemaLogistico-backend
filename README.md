@@ -1,6 +1,6 @@
 # 🚗 Backend para el sistema de gestión de flotas.
 
-Este repositorio contiene el backend de un sistema de gestión de flotas diseñado para administrar vehículos, conductores y viajes. Está construido con **FastAPI** en **Python**, ofreciendo una API RESTful rápida, segura y escalable.
+Este repositorio es parte del Sistema Logistico, este modulo contiene el backend de un sistema de gestión de flotas diseñado para administrar vehículos, conductores y viajes. Está construido con **FastAPI** en **Python**, ofreciendo una API RESTful rápida, segura y escalable.
 
 ---
 
