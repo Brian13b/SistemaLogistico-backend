@@ -1,5 +1,6 @@
 from datetime import date
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.schemas.viajes_schemas import Viaje, ViajeCreate
 from app.crud.viajes_crud import crear_viaje, obtener_viajes, obtener_viaje, actualizar_viaje, eliminar_viaje, buscar_viajes_por_origen, buscar_viajes_por_destino, obtener_viajes_por_estado, obtener_viajes_por_rango_fechas
@@ -7,9 +8,18 @@ from app.database.database import get_db
 
 router = APIRouter()
 
-@router.post("/viajes/", response_model=Viaje)
+@router.post("/viajes/")
 def crear_viaje_endpoint(viaje: ViajeCreate, db: Session = Depends(get_db)):
-    return crear_viaje(db, viaje)
+    nuevo_viaje = crear_viaje(db, viaje)
+    
+    return JSONResponse(
+        status_code=201,
+        content={
+            "message": "Viaje creado exitosamente",
+            "id": nuevo_viaje.id,
+            "codigo": nuevo_viaje.codigo
+        }
+    )
 
 @router.get("/viajes/", response_model=list[Viaje])
 def leer_viajes(db: Session = Depends(get_db)):

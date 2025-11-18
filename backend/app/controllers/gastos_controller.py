@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from sqlalchemy.orm import Session
 from app.schemas.gastos_schemas import Gasto, GastoCreate
 from app.crud.gastos_crud import crear_gasto, exportar_gastos, obtener_gastos, obtener_gasto, eliminar_gasto, obtener_gastos_por_viaje
@@ -8,9 +8,18 @@ from app.services.gastos_pdf import generar_pdf_gastos
 
 router = APIRouter()
 
-@router.post("/gastos/", response_model=Gasto)
+@router.post("/gastos/")
 def crear_gasto_endpoint(gasto: GastoCreate, db: Session = Depends(get_db)):
-    return crear_gasto(db, gasto)
+    nuevo_gasto = crear_gasto(db, gasto)
+    
+    return JSONResponse(
+        status_code=201,
+        content={
+            "message": "Gasto creado exitosamente",
+            "id": nuevo_gasto.id,
+            "monto": nuevo_gasto.monto
+        }
+    )
 
 @router.get("/gastos/", response_model=list[Gasto])
 def obtener_gastos_endpoint(db: Session = Depends(get_db)):

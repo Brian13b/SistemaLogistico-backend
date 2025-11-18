@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.database.database import get_db
 from app.schemas.vehiculos_schemas import Vehiculo, VehiculoCreate
@@ -8,9 +9,19 @@ from app.crud.vehiculos_crud import crear_vehiculo, obtener_vehiculos, obtener_v
 
 router = APIRouter()
 
-@router.post("/vehiculos/", response_model=Vehiculo)
+@router.post("/vehiculos/")
 def crear_vehiculo_endpoint(vehiculo: VehiculoCreate, db: Session = Depends(get_db)):
-    return crear_vehiculo(db, vehiculo)
+    nuevo_vehiculo = crear_vehiculo(db, vehiculo)
+    
+    return JSONResponse(
+        status_code=201,
+        content={
+            "message": "Vehículo creado exitosamente",
+            "id": nuevo_vehiculo.id,
+            "marca": nuevo_vehiculo.marca,
+            "modelo": nuevo_vehiculo.modelo
+        }
+    )
 
 @router.get("/vehiculos/", response_model=list[Vehiculo])
 def leer_vehiculos(db: Session = Depends(get_db)):

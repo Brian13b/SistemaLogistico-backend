@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.schemas.conductores_schemas import Conductor, ConductorCreate
 from app.crud.conductores_crud import crear_conductor, obtener_conductores, obtener_conductor, actualizar_conductor, eliminar_conductor, buscar_conductores_por_nombre, buscar_conductores_por_apellido, obtener_conductores_con_licencias_proximas_a_vencer
@@ -6,9 +7,19 @@ from app.database.database import get_db
 
 router = APIRouter()
 
-@router.post("/conductores/", response_model=Conductor)
+@router.post("/conductores/")
 def crear_conductor_endpoint(conductor: ConductorCreate, db: Session = Depends(get_db)):
-    return crear_conductor(db, conductor)
+    nuevo_conductor = crear_conductor(db, conductor)
+    
+    return JSONResponse(
+        status_code=201,
+        content={
+            "message": "Conductor creado exitosamente",
+            "id": nuevo_conductor.id,
+            "nombre": nuevo_conductor.nombre,
+            "apellido": nuevo_conductor.apellido
+        }
+    )
 
 @router.get("/conductores/", response_model=list[Conductor])
 def leer_conductores(db: Session = Depends(get_db)):

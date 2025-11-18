@@ -6,9 +6,18 @@ from app.crud.ingresos_crud import crear_ingreso, obtener_ingresos, obtener_ingr
 
 router = APIRouter()
 
-@router.post("/ingresos/", response_model=Ingreso)
+@router.post("/ingresos/")
 def crear_ingreso_endpoint(ingreso: IngresoCreate, db: Session = Depends(get_db)):
-    return crear_ingreso(db, ingreso)
+    nuevo_ingreso = crear_ingreso(db, ingreso)
+    
+    return JSONResponse(
+        status_code=201,
+        content={
+            "message": "Ingreso creado exitosamente",
+            "id": nuevo_ingreso.id,
+            "monto": nuevo_ingreso.monto
+        }
+    )
 
 @router.get("/ingresos/", response_model=list[Ingreso])
 def obtener_ingresos_endpoint(db: Session = Depends(get_db)):
