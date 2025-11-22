@@ -7,13 +7,21 @@ class Gasto(Base):
     __tablename__ = "gastos"
 
     id = Column(Integer, primary_key=True, index=True)
-    viaje_id = Column(Integer, ForeignKey("viajes.id"))
+    tipo_gasto = Column(String, nullable=False, default='GENERAL')
+
+    viaje_id = Column(Integer, ForeignKey("viajes.id"), nullable=True)
+    vehiculo_id = Column(Integer, ForeignKey("vehiculos.id"), nullable=True)
+    conductor_id = Column(Integer, ForeignKey("conductores.id"), nullable=True)
+
     nombre = Column(String, nullable=False)
-    descripcion = Column(String)
+    descripcion = Column(String, nullable=True)
     monto = Column(Float, nullable=False)
     fecha = Column(Date, nullable=False)
-    imagen_url = Column(String)
+    imagen_url = Column(String, nullable=True)
+
     creado_en = Column(DateTime, default=datetime.now)
     actualizado_en = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     viaje = relationship("Viaje", back_populates="gastos")
+    vehiculo = relationship("Vehiculo", back_populates="gastos")
+    conductor = relationship("Conductor", back_populates="gastos")

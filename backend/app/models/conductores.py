@@ -22,3 +22,4 @@ class Conductor(Base):
     vehiculos = relationship("Vehiculo", back_populates="conductor")
     viajes = relationship("Viaje", back_populates="conductor")
     documentos = relationship("ConductorDocumento", back_populates="conductor")
+    gastos = relationship("Gasto", back_populates="conductor")

@@ -25,5 +25,5 @@ class Viaje(Base):
     vehiculo = relationship('Vehiculo', back_populates='viajes')
     conductor = relationship('Conductor', back_populates='viajes')
     documentos = relationship('DocumentoViaje', back_populates='viaje')
-    gastos = relationship('Gasto', back_populates='viaje')
-    ingresos = relationship('Ingreso', back_populates='viaje')
+    gastos = relationship("Gasto", back_populates="viaje")
+    ingresos = relationship("Ingreso", back_populates="viaje")
