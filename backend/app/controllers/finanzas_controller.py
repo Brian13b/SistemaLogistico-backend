@@ -4,9 +4,9 @@ from sqlalchemy import func, extract, case
 from datetime import datetime
 from typing import Dict, Any
 from app.database.database import get_db
-from app.models.gasto import Gasto
-from app.models.ingreso import Ingreso
-from app.models.viaje import Viaje
+from app.models.gastos import Gasto
+from app.models.ingresos import Ingreso
+from app.models.viajes import Viaje
 
 router = APIRouter(prefix="/finanzas", tags=["Finanzas"])
 
