@@ -17,7 +17,7 @@ app = FastAPI(swagger_ui_parameters={"syntaxHighlight": {"theme": "monokai"}})
 
 create_tables()
 
-app.include_router(auth_router, prefix="/auth", tags=["authentication"])
+app.include_router(auth_router, prefix="/auth", tags=["Autenticacion"])
 app.include_router(conductores_controller.router, prefix="/api", tags=["Conductores"])
 app.include_router(documentos_conductores_controller.router, prefix="/api", tags=["Documentos Conductores"])
 app.include_router(vehiculos_controller.router, prefix="/api", tags=["Vehiculos"])
