@@ -10,11 +10,7 @@ from app.crud import ingresos_crud
 router = APIRouter(prefix="/ingresos", tags=["Ingresos"])
 
 @router.post("/", response_model=IngresoResponse)
-async def crear_ingreso_endpoint(
-    ingreso_data: str = Form(...),
-    archivo: Optional[UploadFile] = File(None),
-    db: Session = Depends(get_db)
-):
+async def crear_ingreso_endpoint(ingreso_data: str = Form(...), archivo: Optional[UploadFile] = File(None), db: Session = Depends(get_db)):
     try:
         ingreso_dict = json.loads(ingreso_data)
         ingreso_schema = IngresoCreate(**ingreso_dict)

@@ -21,13 +21,11 @@ router = APIRouter()
 
 @router.post("/documentos_viajes/", response_model=DocumentoViajeResponse)
 async def crear_documento_viaje(documento_data: str = Form(...), archivo: UploadFile = File(...), db: Session = Depends(get_db)):
-    """Crear un nuevo documento de viaje con archivo."""
     try:
         # Convertir string JSON a objeto Python
         documento_dict = json.loads(documento_data)
         documento = DocumentoViajeCreate(**documento_dict)
         
-        # Crear el documento con archivo
         return await crear_documento_viaje_con_archivo(db=db, documento=documento, archivo=archivo)
     
     except json.JSONDecodeError as e:
@@ -37,12 +35,10 @@ async def crear_documento_viaje(documento_data: str = Form(...), archivo: Upload
 
 @router.get("/documentos_viajes/", response_model=list[DocumentoViajeResponse])
 def leer_documentos_viajes(db: Session = Depends(get_db)):
-    """Obtener lista de documentos de viaje."""
     return obtener_documentos_viajes(db=db)
 
 @router.get("/documentos_viajes/viajes/{viaje_id}", response_model=list[DocumentoViajeResponse])
 def leer_documentos_viaje_por_viaje(viaje_id: int, db: Session = Depends(get_db)):
-    """Obtener documentos de viaje por ID de viaje."""
     db_documentos = obtener_documentos_viaje_por_viaje(db=db, viaje_id=viaje_id)
     if not db_documentos:
         raise HTTPException(status_code=404, detail="Documentos no encontrados")
@@ -50,7 +46,6 @@ def leer_documentos_viaje_por_viaje(viaje_id: int, db: Session = Depends(get_db)
 
 @router.get("/documentos_viajes/{documento_id}", response_model=DocumentoViajeResponse)
 def leer_documento_viaje(documento_id: int, db: Session = Depends(get_db)):
-    """Obtener un documento de viaje por ID."""
     db_documento = obtener_documento_viaje(db=db, documento_id=documento_id)
     if db_documento is None:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
@@ -58,7 +53,6 @@ def leer_documento_viaje(documento_id: int, db: Session = Depends(get_db)):
 
 @router.put("/documentos_viajes/{documento_id}", response_model=DocumentoViajeResponse)
 async def actualizar_documento_viaje(documento_id: int, documento_data: str = Form(...), archivo: Optional[UploadFile] = None, db: Session = Depends(get_db)):
-    """Actualizar un documento de viaje existente."""
     try:
         # Convertir string JSON a objeto Python
         documento_dict = json.loads(documento_data)
@@ -79,20 +73,20 @@ async def actualizar_documento_viaje(documento_id: int, documento_data: str = Fo
 
 @router.delete("/documentos_viajes/{documento_id}", response_model=DocumentoViajeResponse)
 def eliminar_documento_viaje_endpoint(documento_id: int, db: Session = Depends(get_db)):
-    """Eliminar un documento de viaje."""
     db_documento = eliminar_documento_viaje(db=db, documento_id=documento_id)
     if db_documento is None:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     return db_documento
 
+# Otras operaciones relacionadas con Documentos
+
 @router.get("/documentos_viajes/proximos_vencimientos/{dias}", response_model=list[DocumentoViajeResponse])
 def leer_documentos_proximos_vencimientos(dias: int = 30, db: Session = Depends(get_db)):
-    """Obtener documentos de viajes próximos a vencer."""
     return obtener_documentos_proximos_a_vencer(db=db, dias=dias)
 
 @router.get("/documentos_viajes/{documento_id}/descargar")
 async def descargar_documento_viaje(documento_id: int, db: Session = Depends(get_db)):
-    """Descargar el archivo asociado a un documento de viaje."""
+    """Descargar el archivo asociado a un documento de viaje"""
     db_documento = obtener_documento_viaje(db=db, documento_id=documento_id)
 
     if db_documento is None:

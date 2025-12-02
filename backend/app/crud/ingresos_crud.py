@@ -12,7 +12,6 @@ async def crear_ingreso_con_archivo(db: Session, ingreso: IngresoCreate, archivo
     
     if archivo:
         try:
-            # Reutilizamos el servicio de Drive
             file_info = await drive_service.upload_file_to_drive(archivo)
             ingreso_dict["imagen_url"] = file_info.get('url') or file_info.get('webViewLink')
         except Exception as e:

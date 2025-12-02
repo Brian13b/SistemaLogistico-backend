@@ -4,9 +4,7 @@ from app.models.viaje_documentos import DocumentoViaje
 from app.schemas.viajes_documentos_schemas import DocumentoViajeCreate
 from app.services.google_drive import drive_service
 
-# Create
 async def crear_documento_viaje_con_archivo(db: Session, documento: DocumentoViajeCreate, archivo):
-    """Crear un documento de viaje con su archivo asociado."""
     file_info = await drive_service.upload_file_to_drive(archivo)
     
     db_documento = DocumentoViaje(
@@ -25,13 +23,10 @@ async def crear_documento_viaje_con_archivo(db: Session, documento: DocumentoVia
     db.refresh(db_documento)
     return db_documento
 
-# Read
 def obtener_documentos_viaje_por_viaje(db: Session, viaje_id: int):
     return db.query(DocumentoViaje).filter(DocumentoViaje.viaje_id == viaje_id).all()
 
-# Update
 async def actualizar_documento_viaje_con_archivo(db: Session, documento_id: int, documento: DocumentoViajeCreate, archivo=None):
-    """Actualizar un documento de viaje y opcionalmente su archivo."""
     db_documento = db.query(DocumentoViaje).filter(DocumentoViaje.id == documento_id).first()
     
     if not db_documento:
@@ -55,7 +50,6 @@ async def actualizar_documento_viaje_con_archivo(db: Session, documento_id: int,
     db.refresh(db_documento)
     return db_documento
 
-# Delete
 def eliminar_documento_viaje(db: Session, documento_id: int):
     db_documento = db.query(DocumentoViaje).filter(DocumentoViaje.id == documento_id).first()
     db.delete(db_documento)

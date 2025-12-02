@@ -21,13 +21,11 @@ router = APIRouter()
 
 @router.post("/documentos_vehiculos/", response_model=DocumentoVehiculoResponse)
 async def crear_documento_vehiculo(documento_data: str = Form(...), archivo: UploadFile = File(...), db: Session = Depends(get_db)):
-    """Crear un nuevo documento de vehículo con archivo."""
     try:
         # Convertir string JSON a objeto Python
         documento_dict = json.loads(documento_data)
         documento = DocumentoVehiculoCreate(**documento_dict)
         
-        # Crear el documento con archivo
         return await crear_documento_vehiculo_con_archivo(db=db, documento=documento, archivo=archivo)
     
     except json.JSONDecodeError as e:
@@ -37,7 +35,6 @@ async def crear_documento_vehiculo(documento_data: str = Form(...), archivo: Upl
 
 @router.get("/documentos_vehiculos/vehiculos/{vehiculo_id}", response_model=list[DocumentoVehiculoResponse])
 def leer_documentos_vehiculo_por_vehiculo(vehiculo_id: int, db: Session = Depends(get_db)):
-    """Obtener documentos de vehículo por ID de vehículo."""
     db_documentos = obtener_documentos_vehiculo_por_vehiculo(db=db, vehiculo_id=vehiculo_id)
     if not db_documentos:
         raise HTTPException(status_code=404, detail="Documentos no encontrados")
@@ -45,12 +42,10 @@ def leer_documentos_vehiculo_por_vehiculo(vehiculo_id: int, db: Session = Depend
 
 @router.get("/documentos_vehiculos/", response_model=list[DocumentoVehiculoResponse])
 def leer_documentos_vehiculos(db: Session = Depends(get_db)):
-    """Obtener lista de documentos de vehículos."""
     return obtener_documentos_vehiculos(db=db)
 
 @router.get("/documentos_vehiculos/{documento_vehiculo_id}", response_model=DocumentoVehiculoResponse)
 def leer_documento_vehiculo(documento_vehiculo_id: int, db: Session = Depends(get_db)):
-    """Obtener un documento de vehículo por ID."""
     documento_vehiculo = obtener_documento_vehiculo(db, documento_vehiculo_id)
     if documento_vehiculo is None:
         raise HTTPException(status_code=404, detail="Documento vehiculo no encontrado")
@@ -58,7 +53,6 @@ def leer_documento_vehiculo(documento_vehiculo_id: int, db: Session = Depends(ge
 
 @router.put("/documentos_vehiculos/{documento_vehiculo_id}", response_model=DocumentoVehiculoResponse)
 async def actualizar_documento_vehiculo(documento_vehiculo_id: int, documento_data: str = Form(...), archivo: Optional[UploadFile] = None, db: Session = Depends(get_db)):
-    """Actualizar un documento de vehículo existente."""
     try:
         # Convertir string JSON a objeto Python
         documento_dict = json.loads(documento_data)
@@ -74,7 +68,6 @@ async def actualizar_documento_vehiculo(documento_vehiculo_id: int, documento_da
 
 @router.delete("/documentos_vehiculos/{documento_vehiculo_id}")
 def eliminar_documento_vehiculo_endpoint(documento_vehiculo_id: int, db: Session = Depends(get_db)):
-    """Eliminar un documento de vehículo por ID."""
     documento_vehiculo_eliminado = eliminar_documento_vehiculo(db, documento_vehiculo_id)
     if documento_vehiculo_eliminado is None:
         raise HTTPException(status_code=404, detail="Documento vehiculo no encontrado")
@@ -83,17 +76,14 @@ def eliminar_documento_vehiculo_endpoint(documento_vehiculo_id: int, db: Session
 # Otras operaciones relacionadas con Documentos
 @router.get("/documentos_vehiculos/vencidos/", response_model=list[DocumentoVehiculoResponse])
 def leer_documentos_vehiculo_vencidos(db: Session = Depends(get_db)):
-    """Obtener documentos de vehículos vencidos."""
     return obtener_documentos_vehiculo_vencidos(db=db)
 
 @router.get("/documentos_vehiculos/proximos_vencimientos/{dias}", response_model=list[DocumentoVehiculoResponse])
 def leer_documentos_vehiculo_proximos_vencimientos( dias: int = 30, db: Session = Depends(get_db)):
-    """Obtener documentos de vehículos próximos a vencer."""
     return obtener_documentos_proximos_a_vencer(db=db, dias=dias)
 
 @router.get("/documentos_vehiculos/{documento_vehiculo_id}/descargar")
 async def descargar_documento_vehiculo(documento_vehiculo_id: int, db: Session = Depends(get_db)):
-    """Descargar el archivo asociado a un documento de vehículo."""
     db_documento = obtener_documento_vehiculo(db=db, documento_id=documento_vehiculo_id)
 
     if db_documento is None:

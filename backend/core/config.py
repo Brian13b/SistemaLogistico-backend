@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     SMTP_SERVER: str = os.getenv("SMTP_SERVER", "smtp.gmail.com")
     SMTP_PORT: int = os.getenv("SMTP_PORT", 587)
     EMAIL_USERNAME: str = os.getenv("EMAIL_USERNAME", "blogistic.soporte@gmail.com")
-    EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD", "izhnerkjwkhrsuwj")
-    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "Blogistic Soporte <blogistic.soporte@gmail.com>")
+    EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD")
+    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "Blogistica Soporte <blogistic.soporte@gmail.com>")
 
     # Google Drive
     GOOGLE_TYPE: str = os.getenv("GOOGLE_TYPE")

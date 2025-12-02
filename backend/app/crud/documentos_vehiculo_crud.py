@@ -4,9 +4,7 @@ from app.models.vehiculo_documentos import DocumentoVehiculo
 from app.schemas.vehiculos_documentos_schemas import DocumentoVehiculoCreate
 from app.services.google_drive import drive_service
 
-# Create
 async def crear_documento_vehiculo_con_archivo(db: Session, documento: DocumentoVehiculoCreate, archivo):
-    """Crear un documento de vehículo con su archivo asociado."""
     file_info = await drive_service.upload_file_to_drive(archivo)
     
     db_documento = DocumentoVehiculo(
@@ -26,13 +24,10 @@ async def crear_documento_vehiculo_con_archivo(db: Session, documento: Documento
     db.refresh(db_documento)
     return db_documento
 
-# Read
 def obtener_documentos_vehiculo_por_vehiculo(db: Session, vehiculo_id: int):
     return db.query(DocumentoVehiculo).filter(DocumentoVehiculo.id_vehiculo == vehiculo_id).all()
 
-# Update
 async def actualizar_documento_vehiculo_con_archivo(db: Session, documento_id: int, documento: DocumentoVehiculoCreate, archivo=None):
-    """Actualizar un documento de vehículo y opcionalmente su archivo."""
     db_documento = db.query(DocumentoVehiculo).filter(DocumentoVehiculo.id == documento_id).first()
     
     if not db_documento:
@@ -56,7 +51,6 @@ async def actualizar_documento_vehiculo_con_archivo(db: Session, documento_id: i
     db.refresh(db_documento)
     return db_documento
 
-# Delete
 def eliminar_documento_vehiculo(db: Session, documento_id: int):
     db_documento = db.query(DocumentoVehiculo).filter(DocumentoVehiculo.id == documento_id).first()
     db.delete(db_documento)

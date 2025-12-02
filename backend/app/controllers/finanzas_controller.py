@@ -11,16 +11,10 @@ from app.models.viajes import Viaje
 router = APIRouter(prefix="/finanzas", tags=["Finanzas"])
 
 @router.get("/dashboard")
-def obtener_metricas_dashboard(
-    mes: int = datetime.now().month,
-    anio: int = datetime.now().year,
-    db: Session = Depends(get_db)
-):
-    """
-    Devuelve todos los datos calculados para los gráficos del Frontend
-    """
+def obtener_metricas_dashboard(mes: int = datetime.now().month, anio: int = datetime.now().year, db: Session = Depends(get_db)):
+    """Devuelve todos los datos calculados para los gráficos"""
     try:
-        # 1. METRICAS TOTALES DEL MES
+        # Totales del mes
         total_ingresos = db.query(func.sum(Ingreso.monto)).filter(
             extract('month', Ingreso.fecha) == mes,
             extract('year', Ingreso.fecha) == anio
@@ -31,15 +25,12 @@ def obtener_metricas_dashboard(
             extract('year', Gasto.fecha) == anio
         ).scalar() or 0.0
 
-        # 2. PARA GRÁFICO DE BARRAS (Ingresos vs Gastos últimos 6 meses)
-        # Esta query es un poco más compleja, agrupa por mes
-        # (Simplificación: devolvemos el mes actual y simulamos anteriores si no hay datos
-        # para que el gráfico no se rompa, idealmente se hace una query de rango)
+        # Para el grafico de barras
         ingresos_vs_gastos = [
             {"mes": f"{mes}/{anio}", "ingresos": total_ingresos, "gastos": total_gastos}
         ]
 
-        # 3. PARA GRÁFICO DE TORTA (Gastos por Tipo)
+        # Para el grafico de toratas
         gastos_por_tipo_query = db.query(
             Gasto.tipo_gasto, 
             func.sum(Gasto.monto)
@@ -48,17 +39,14 @@ def obtener_metricas_dashboard(
             extract('year', Gasto.fecha) == anio
         ).group_by(Gasto.tipo_gasto).all()
 
-        # Formatear para Recharts (PieChart)
-        # Colores harcodeados o asignados en el front
         gastos_por_tipo = [
             {"nombre": tipo, "valor": monto} for tipo, monto in gastos_por_tipo_query
         ]
 
-        # 4. PARA GRÁFICO DE LÍNEAS (Consumo Combustible)
-        # Filtramos gastos tipo 'COMBUSTIBLE'
+        # Para grafico de lineas
         combustible_query = db.query(
             extract('day', Gasto.fecha).label('dia'),
-            func.sum(Gasto.monto).label('monto') # O litros si tuvieras esa columna
+            func.sum(Gasto.monto).label('monto')
         ).filter(
             Gasto.tipo_gasto == 'COMBUSTIBLE',
             extract('month', Gasto.fecha) == mes,
@@ -69,7 +57,7 @@ def obtener_metricas_dashboard(
             {"dia": str(int(dia)), "consumo": monto} for dia, monto in combustible_query
         ]
 
-        # 5. LISTA DE VIAJES RECIENTES (Para la tabla)
+        # Los ultimos viajes
         ultimos_viajes = db.query(Viaje).order_by(Viaje.fecha_salida.desc()).limit(10).all()
         
         return {
@@ -83,7 +71,7 @@ def obtener_metricas_dashboard(
                 "gastos_por_tipo": gastos_por_tipo,
                 "consumo_combustible": consumo_diario
             },
-            "viajes_tabla": ultimos_viajes # Serializar esto con Pydantic en el front
+            "viajes_tabla": ultimos_viajes
         }
 
     except Exception as e:

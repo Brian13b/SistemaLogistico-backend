@@ -4,9 +4,7 @@ from app.models.conductor_documentos import ConductorDocumento
 from app.schemas.conductores_documentos_schemas import DocumentoConductorCreate
 from app.services.google_drive import drive_service
 
-# Create
 async def crear_documento_conductor_con_archivo(db: Session, documento: DocumentoConductorCreate, archivo):
-    """Crear un documento de conductor con su archivo asociado."""
     file_info = await drive_service.upload_file_to_drive(archivo)
     
     db_documento = ConductorDocumento(
@@ -26,13 +24,10 @@ async def crear_documento_conductor_con_archivo(db: Session, documento: Document
     db.refresh(db_documento)
     return db_documento
 
-# Read
 def obtener_documentos_conductor_por_conductor(db: Session, conductor_id: int):
     return db.query(ConductorDocumento).filter(ConductorDocumento.id_conductor == conductor_id).all()
 
-# Update
 async def actualizar_documento_conductor_con_archivo(db: Session, documento_id: int, documento: DocumentoConductorCreate, archivo=None):
-    """Actualizar un documento de conductor y opcionalmente su archivo."""
     db_documento = db.query(ConductorDocumento).filter(ConductorDocumento.id == documento_id).first()
     
     if not db_documento:
@@ -56,7 +51,6 @@ async def actualizar_documento_conductor_con_archivo(db: Session, documento_id: 
     db.refresh(db_documento)
     return db_documento
 
-# Delete
 def eliminar_documento_conductor(db: Session, documento_id: int):
     db_documento = db.query(ConductorDocumento).filter(ConductorDocumento.id == documento_id).first()
     db.delete(db_documento)

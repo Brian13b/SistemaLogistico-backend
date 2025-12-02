@@ -21,5 +21,4 @@ class Ingreso(Base):
     creado_en = Column(DateTime, default=datetime.now)
     actualizado_en = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
-    # Relaciones
     viaje = relationship("Viaje", back_populates="ingresos")

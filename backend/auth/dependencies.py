@@ -10,13 +10,10 @@ from core.config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-def get_current_user(
-    token: str = Depends(oauth2_scheme), 
-    db: Session = Depends(get_db)
-):
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="Credenciales de autenticación inválidas",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -41,7 +38,7 @@ def require_role(role: UserRole):
         if current_user.role != role:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
+                detail="No tienes permiso para realizar esta acción"
             )
         return current_user
     return role_checker
