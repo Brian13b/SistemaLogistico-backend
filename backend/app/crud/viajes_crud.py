@@ -11,7 +11,7 @@ def crear_viaje(db: Session, viaje: ViajeCreate):
     return db_viaje
 
 def obtener_viajes(db: Session):
-    return db.query(Viaje).all().order_by(Viaje.fecha_salida.desc())
+    return db.query(Viaje).order_by(Viaje.fecha_salida.desc()).all()
 
 
 def obtener_viaje(db: Session, viaje_id: int):
