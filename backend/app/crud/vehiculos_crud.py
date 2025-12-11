@@ -33,6 +33,9 @@ def obtener_vehiculos_por_estado(db: Session, estado: str):
 
 def actualizar_vehiculo(db: Session, vehiculo_id: int, vehiculo: VehiculoCreate):
     db_vehiculo = db.query(Vehiculo).filter(Vehiculo.id == vehiculo_id).first()
+    if not db_vehiculo:
+        return None
+
     db_vehiculo.marca = vehiculo.marca
     db_vehiculo.modelo = vehiculo.modelo
     db_vehiculo.patente = vehiculo.patente
@@ -40,7 +43,12 @@ def actualizar_vehiculo(db: Session, vehiculo_id: int, vehiculo: VehiculoCreate)
     db_vehiculo.tipo = vehiculo.tipo
     db_vehiculo.estado = vehiculo.estado
     db_vehiculo.kilometraje = vehiculo.kilometraje
-    db_vehiculo.id_conductor = vehiculo.id_conductor
+    
+    if vehiculo.id_conductor == 0:
+        db_vehiculo.id_conductor = None
+    else:
+        db_vehiculo.id_conductor = vehiculo.id_conductor
+
     db_vehiculo.fecha_actualizacion = datetime.now()
     db.commit()
     db.refresh(db_vehiculo)
