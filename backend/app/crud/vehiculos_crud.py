@@ -4,7 +4,13 @@ from app.models.vehiculos import Vehiculo
 from app.schemas.vehiculos_schemas import VehiculoCreate
 
 def crear_vehiculo(db: Session, vehiculo: VehiculoCreate):
-    db_vehiculo = Vehiculo(**vehiculo.model_dump())
+    vehiculo_data = vehiculo.model_dump()
+
+    if vehiculo_data.get('id_conductor') == 0:
+        vehiculo_data['id_conductor'] = None
+
+    db_vehiculo = Vehiculo(**vehiculo_data)
+    
     db.add(db_vehiculo)
     db.commit()
     db.refresh(db_vehiculo)
