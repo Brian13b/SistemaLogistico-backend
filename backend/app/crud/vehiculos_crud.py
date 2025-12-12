@@ -1,3 +1,4 @@
+import uuid
 from sqlalchemy.orm import Session
 from datetime import datetime
 from app.models.vehiculos import Vehiculo
@@ -9,6 +10,8 @@ def crear_vehiculo(db: Session, vehiculo: VehiculoCreate):
     if vehiculo_data.get('id_conductor') == 0:
         vehiculo_data['id_conductor'] = None
 
+    if not vehiculo_data.get('codigo'):
+        vehiculo_data['codigo'] = f"VC-{uuid.uuid4().hex[:6].upper()}"
     db_vehiculo = Vehiculo(**vehiculo_data)
     
     db.add(db_vehiculo)
