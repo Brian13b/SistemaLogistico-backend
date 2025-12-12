@@ -1,3 +1,4 @@
+import uuid
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from app.models.conductores import Conductor
