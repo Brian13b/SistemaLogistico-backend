@@ -4,7 +4,12 @@ from app.models.conductores import Conductor
 from app.schemas.conductores_schemas import ConductorCreate
 
 def crear_conductor(db: Session, conductor: ConductorCreate):
-    db_conductor = Conductor(**conductor.model_dump())
+    conductor_data = conductor.model_dump()
+
+    if not conductor_data.get("codigo"):
+        conductor_data["codigo"] = f"C-{uuid.uuid4().hex[:6].upper()}"
+
+    db_conductor = Conductor(**conductor_data)
     db.add(db_conductor)
     db.commit()
     db.refresh(db_conductor)

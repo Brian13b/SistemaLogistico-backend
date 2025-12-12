@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, field_validator
 from datetime import date, datetime
 
 class ConductorBase(BaseModel):
-    codigo: str = Field(..., min_length=3, max_length=10, description="Código del conductor")
+    codigo: Optional[str] = Field(None, description="Código del conductor (Auto-generado si se omite)")
     nombre: str = Field(..., min_length=3, max_length=50, description="Nombre del conductor")
     apellido: str = Field(..., min_length=3, max_length=50, description="Apellido del conductor")
     dni: str = Field(..., min_length=7, max_length=8, description="DNI del conductor")
