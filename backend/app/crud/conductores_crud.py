@@ -29,6 +29,9 @@ def obtener_conductores_con_licencias_proximas_a_vencer(db: Session, dias_antes:
 
 def actualizar_conductor(db: Session, conductor_id: int, conductor: ConductorCreate):
     db_conductor = db.query(Conductor).filter(Conductor.id == conductor_id).first()
+    if not db_conductor:
+        return None
+    
     db_conductor.codigo = conductor.codigo
     db_conductor.nombre = conductor.nombre
     db_conductor.apellido = conductor.apellido
@@ -38,7 +41,9 @@ def actualizar_conductor(db: Session, conductor_id: int, conductor: ConductorCre
     db_conductor.email_contacto = conductor.email_contacto
     db_conductor.direccion = conductor.direccion
     db_conductor.estado = conductor.estado
+    db_conductor.fecha_nacimiento = conductor.fecha_nacimiento
     db_conductor.actualizado_en = datetime.now()
+    
     db.commit()
     db.refresh(db_conductor)
     return db_conductor

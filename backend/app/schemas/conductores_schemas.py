@@ -1,18 +1,25 @@
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import date, datetime
 
 class ConductorBase(BaseModel):
     codigo: str = Field(..., min_length=3, max_length=10, description="Código del conductor")
     nombre: str = Field(..., min_length=3, max_length=50, description="Nombre del conductor")
     apellido: str = Field(..., min_length=3, max_length=50, description="Apellido del conductor")
-    dni: str = Field(..., min_length=8, max_length=8, description="DNI del conductor")
+    dni: str = Field(..., min_length=7, max_length=8, description="DNI del conductor")
     foto: Optional[str] = Field(None, description="Foto del conductor")
     numero_contacto: Optional[str] = Field(None, min_length=9, max_length=11, description="Número de contacto del conductor")
     email_contacto: Optional[str] = Field(None, max_length=50, description="Email de contacto del conductor")
     direccion: str = Field(..., max_length=50, description="Dirección del conductor")
     estado: str = Field("Activo", description="Estado del conductor")
+    fecha_nacimiento: Optional[date] = Field(None, description="Fecha de nacimiento")
 
+    @field_validator('fecha_nacimiento', mode='before')
+    def empty_string_to_none(cls, v):
+        if v == "" or v == "null":
+            return None
+        return v
+    
 class ConductorCreate(ConductorBase):
     pass
 
