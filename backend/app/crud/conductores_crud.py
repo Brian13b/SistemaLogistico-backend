@@ -1,10 +1,16 @@
+import uuid
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from app.models.conductores import Conductor
 from app.schemas.conductores_schemas import ConductorCreate
 
 def crear_conductor(db: Session, conductor: ConductorCreate):
-    db_conductor = Conductor(**conductor.model_dump())
+    conductor_data = conductor.model_dump()
+
+    if not conductor_data.get("codigo"):
+        conductor_data["codigo"] = f"C-{uuid.uuid4().hex[:6].upper()}"
+
+    db_conductor = Conductor(**conductor_data)
     db.add(db_conductor)
     db.commit()
     db.refresh(db_conductor)
@@ -29,6 +35,9 @@ def obtener_conductores_con_licencias_proximas_a_vencer(db: Session, dias_antes:
 
 def actualizar_conductor(db: Session, conductor_id: int, conductor: ConductorCreate):
     db_conductor = db.query(Conductor).filter(Conductor.id == conductor_id).first()
+    if not db_conductor:
+        return None
+    
     db_conductor.codigo = conductor.codigo
     db_conductor.nombre = conductor.nombre
     db_conductor.apellido = conductor.apellido
@@ -38,7 +47,9 @@ def actualizar_conductor(db: Session, conductor_id: int, conductor: ConductorCre
     db_conductor.email_contacto = conductor.email_contacto
     db_conductor.direccion = conductor.direccion
     db_conductor.estado = conductor.estado
+    db_conductor.fecha_nacimiento = conductor.fecha_nacimiento
     db_conductor.actualizado_en = datetime.now()
+    
     db.commit()
     db.refresh(db_conductor)
     return db_conductor

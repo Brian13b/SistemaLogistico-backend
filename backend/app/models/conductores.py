@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Date, Text
 from sqlalchemy.orm import relationship
 from app.database.database import Base
 from datetime import datetime
@@ -12,6 +12,7 @@ class Conductor(Base):
     apellido = Column(String(50), nullable=False)
     foto = Column(String)
     dni = Column(String, nullable=False, unique=True)
+    fecha_nacimiento = Column(Date, nullable=True)
     numero_contacto = Column(String)
     email_contacto = Column(String(50))
     direccion = Column(String(100), nullable=False)

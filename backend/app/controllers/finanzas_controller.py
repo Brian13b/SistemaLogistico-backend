@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func, extract, case
+from sqlalchemy import func, extract, desc, case
 from datetime import datetime
 from typing import Dict, Any
 from app.database.database import get_db
@@ -57,14 +57,21 @@ def obtener_metricas_dashboard(mes: int = datetime.now().month, anio: int = date
             {"dia": str(int(dia)), "consumo": monto} for dia, monto in combustible_query
         ]
 
+        total_viajes_mes = db.query(func.count(Viaje.id)).filter(
+            extract('month', Viaje.fecha_salida) == mes,
+            extract('year', Viaje.fecha_salida) == anio
+        ).scalar() or 0
+        
         # Los ultimos viajes
         ultimos_viajes = db.query(Viaje).order_by(Viaje.fecha_salida.desc()).limit(10).all()
+        
         
         return {
             "metricas": {
                 "ingresos_mes": total_ingresos,
                 "gastos_mes": total_gastos,
-                "balance": total_ingresos - total_gastos
+                "balance": total_ingresos - total_gastos,
+                "total_viajes": total_viajes_mes
             },
             "graficos": {
                 "ingresos_gastos": ingresos_vs_gastos,

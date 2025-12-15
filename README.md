@@ -1,33 +1,43 @@
-# 🚗 Backend para el sistema de gestión de flotas.
+# 🚗 Backend Core - Gestión de Flotas
 
-Este repositorio es parte del Sistema Logistico, este modulo contiene el backend de un sistema de gestión de flotas diseñado para administrar vehículos, conductores y viajes. Está construido con **FastAPI** en **Python**, ofreciendo una API RESTful rápida, segura y escalable.
-
----
-
-🌟 **¿Qué hace este microservicio?**  
-- Proporciona una API para gestionar vehículos, conductores (empleados) y viajes.  
-- Permite la creación, seguimiento y finalización de viajes asignando recursos.  
-- Implementa autenticación y autorización con **JWT** para un acceso seguro.
+El núcleo administrativo del **Sistema Logístico**. Este microservicio gestiona la lógica de negocio principal: recursos humanos, flota vehicular y logística de viajes.
 
 ---
 
-🔧 **Características principales**  
-- 🚘 CRUD completo para Vehiculos, Empleados y Viajes.  
-- 👤 Gestión de papeles.  
-- 🗺️ Creación y seguimiento de viajes con asignación de vehículo y conductor.  
-- 📊 Generación de reportes.  
-- 🔐 Autenticación y autorización segura con **JSON Web Tokens (JWT)**.
+## 🌟 Funcionalidades Principales
+- **Gestión de Recursos:** ABM (Alta, Baja, Modificación) de Vehículos y Empleados.
+- **Logística de Viajes:** Asignación de conductor + vehículo + ruta.
+- **Control Documental:** Gestión de vencimientos (Licencias, Seguros, VTV).
+- **Reportes:** Generación de estadísticas operativas.
+- **Autenticación:** Generación de tokens JWT para inicio de sesión.
 
 ---
 
-🛡️ **Tecnologías Usadas**  
-- 🖥️ Lenguaje: Python  
-- ⚡ Framework: FastAPI  
-- 🗄️ Base de datos: PostgreSQL  
-- 🔐 Autenticación: JSON Web Tokens (JWT)
+## 🔧 Modelado de Datos
+El sistema utiliza PostgreSQL para relacionar:
+- `Usuarios` (Roles y Permisos)
+- `Empleados` (Datos laborales)
+- `Vehículos` (Datos técnicos y estado)
+- `Viajes` (Origen, destino, carga, estados)
 
 ---
 
-🌱 **Futuras actualizaciones** 
-- 🔄 Soporte para notificaciones automáticas (email/SMS).
+## 🛡️ Stack Tecnológico
+- **Lenguaje:** Python
+- **Framework:** FastAPI
+- **ORM:** SQLAlchemy
+- **Base de Datos:** PostgreSQL
+- **Validación:** Pydantic
 
+---
+
+## 🌱 Futuras Actualizaciones
+- [ ] **Mantenimiento:** Módulo para programar y registrar reparaciones de vehículos.
+- [ ] **Notificaciones:** Alertas automáticas por vencimiento de documentación.
+- [ ] **Dashboard Analítico:** Endpoints específicos para métricas de rentabilidad.
+- [ ] **Tests:** Cobertura de código con Pytest.
+
+---
+
+## 👤 Autor
+**Brian Battauz** - [GitHub](https://github.com/Brian13b)
