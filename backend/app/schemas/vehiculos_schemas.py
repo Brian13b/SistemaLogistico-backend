@@ -15,6 +15,19 @@ class VehiculoBase(BaseModel):
     kilometraje: float = Field(..., description="Kilometraje del vehículo")
     id_conductor: Optional[int] = Field(None, description="ID del conductor asociado")
 
+class VehiculoLigero(BaseModel):
+    id: int
+    patente: str
+    marca: Optional[str] = None
+    modelo: Optional[str] = None
+    estado: Optional[str] = None
+    anio: Optional[int] = None
+    tipo: Optional[str] = None
+    id_conductor: Optional[int] = None
+    
+    class Config:
+        from_attributes = True
+        
 class VehiculoCreate(VehiculoBase):
     pass
 
